@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getProduits } from "@/lib/commerce";
 import { CollectionVue } from "@/components/carousel/CollectionVue";
+import { Footer } from "@/components/layout/Footer";
 
 export const metadata: Metadata = {
   title: "Collection",
@@ -10,5 +11,10 @@ export const metadata: Metadata = {
 
 export default async function CollectionPage({ searchParams }: { searchParams: Promise<{ modele?: string; vue?: string }> }) {
   const [produits, sp] = await Promise.all([getProduits(), searchParams]);
-  return <CollectionVue produits={produits} initialSlug={sp.modele ?? null} vueInitiale={sp.vue === "grille" ? "grille" : "carrousel"} />;
+  return (
+    <>
+      <CollectionVue produits={produits} initialSlug={sp.modele ?? null} vueInitiale={sp.vue === "grille" ? "grille" : "carrousel"} />
+      <Footer />
+    </>
+  );
 }
