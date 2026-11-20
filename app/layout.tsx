@@ -10,6 +10,7 @@ import { Menu } from "@/components/layout/Menu";
 import { CookieBanner } from "@/components/layout/CookieBanner";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { Annonceur } from "@/components/layout/Annonceur";
+import { RideauNavigation } from "@/components/layout/RideauNavigation";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
@@ -54,6 +55,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <Menu />
             <CartDrawer />
             <main id="contenu">{children}</main>
+            <RideauNavigation />
             <CookieBanner />
             <Annonceur />
           </SmoothScroll>

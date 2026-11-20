@@ -1,12 +1,13 @@
-"use client";
-import { Logo } from "@/components/brand/Logo";
-import { useTonEntete } from "@/lib/store";
+import { getProduits } from "@/lib/commerce";
+import { Accueil } from "@/components/home/Accueil";
+import { Footer } from "@/components/layout/Footer";
 
-export default function Accueil() {
-  useTonEntete("fonce");
+export default async function Page() {
+  const produits = await getProduits();
   return (
-    <section className="grid min-h-svh place-items-center bg-nuit px-6">
-      <Logo variant="fonce" animate className="w-[min(80vw,520px)]" />
-    </section>
+    <>
+      <Accueil produits={produits} />
+      <Footer />
+    </>
   );
 }
