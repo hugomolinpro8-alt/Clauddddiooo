@@ -39,7 +39,7 @@ export function Galerie({ produit }: { produit: Produit }) {
             className="absolute inset-0"
           >
             {vue === "photos" && (
-              <Image src={produit.photos[photo]} alt={`${produit.nom} — photo ${photo + 1}`} fill priority sizes="(max-width: 1024px) 100vw, 55vw" className="object-cover" />
+              <Image src={produit.photos[photo]} alt={`${produit.nom} — photo ${photo + 1}`} fill preload sizes="(max-width: 1024px) 100vw, 55vw" className="object-cover" />
             )}
             {vue === "360" && produit.sequence360 && <Viewer360 {...produit.sequence360} alt={produit.nom} />}
             {vue === "3d" && <Viewer3D glb={produit.modele3d} teinte={produit.teinteVerre} />}

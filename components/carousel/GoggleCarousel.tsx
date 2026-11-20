@@ -297,7 +297,7 @@ export function GoggleCarousel({ produits, initialSlug, syncUrl = false, classNa
                     width={1600}
                     height={1000}
                     sizes="(max-width: 640px) 92vw, (max-width: 1024px) 70vw, 54vw"
-                    priority={k === centre}
+                    fetchPriority={k === centre ? "high" : "auto"}
                     loading={Math.abs(k - centre) <= 1 ? "eager" : "lazy"}
                     draggable={false}
                     className="h-auto w-full drop-shadow-[0_40px_40px_rgba(0,0,0,0.35)]"

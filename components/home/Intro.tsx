@@ -49,7 +49,7 @@ export const Intro = forwardRef<HTMLDivElement, Props>(function Intro({ produits
       {/* Fond flou animé */}
       <div aria-hidden="true" className="absolute inset-0" data-intro-fond>
         <div className="anim-derive absolute -inset-[12%]">
-          <Image src="/scenes/intro.svg" alt="" fill priority unoptimized className="object-cover blur-[28px] saturate-150" />
+          <Image src="/scenes/intro.svg" alt="" fill loading="eager" unoptimized className="object-cover blur-[28px] saturate-150" />
         </div>
         <div className="absolute left-[8%] top-[12%] h-[55vmax] w-[55vmax] rounded-full bg-[radial-gradient(circle,rgba(44,93,143,0.75),transparent_65%)] blur-3xl anim-derive [animation-duration:17s]" />
         <div className="absolute bottom-[-20%] right-[-10%] h-[60vmax] w-[60vmax] rounded-full bg-[radial-gradient(circle,rgba(159,179,200,0.45),transparent_60%)] blur-3xl anim-derive [animation-delay:-8s] [animation-duration:25s]" />

@@ -71,7 +71,7 @@ export function TechnologieVue() {
       {/* Ouverture */}
       <section className="relative flex min-h-svh flex-col items-center justify-center overflow-hidden px-6 text-center">
         <div aria-hidden="true" className="absolute inset-0">
-          <Image src="/scenes/intro.svg" alt="" fill priority unoptimized className="object-cover opacity-50 blur-[2px]" />
+          <Image src="/scenes/intro.svg" alt="" fill loading="eager" unoptimized className="object-cover opacity-50 blur-[2px]" />
           <div className="absolute inset-0 bg-gradient-to-b from-nuit/40 via-nuit/60 to-nuit" />
         </div>
         <p className="label relative text-glacier">Technologie</p>
