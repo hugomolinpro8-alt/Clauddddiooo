@@ -3,3 +3,4 @@ dist
 *.local
 artifact/
 test-results
+test-results-e2e-failure.png
