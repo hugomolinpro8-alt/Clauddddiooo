@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useLayoutEffect, useRef } from "react";
+import { useEffect, useId, useLayoutEffect, useRef } from "react";
 import gsap from "gsap";
 import { cn } from "@/lib/utils";
 
@@ -29,7 +29,9 @@ export function Logo({ variant = "clair", symbolOnly = false, animate = false, o
   const zigzag = variant === "fonce" ? "#0E1A2B" : "#FFFFFF";
   const texte = variant === "fonce" ? "#FFFFFF" : "#0E1A2B";
   const cb = useRef(onAnimationComplete);
-  cb.current = onAnimationComplete;
+  useEffect(() => {
+    cb.current = onAnimationComplete;
+  }, [onAnimationComplete]);
 
   useLayoutEffect(() => {
     if (!animate || !root.current) return;
