@@ -23,7 +23,7 @@ try {
   await page.getByText("Un programme jour par jour").waitFor();
   await shot("01-accueil-vide");
   step("Chargement de la démo");
-  await page.getByRole("button", { name: /Essayer avec la démo/ }).click();
+  await page.getByRole("button", { name: /Charger les données de test/ }).click();
   await page.getByRole("heading", { name: "Aujourd'hui" }).waitFor();
 
   step("Check-in");
@@ -96,7 +96,7 @@ try {
   m.on("pageerror", (e) => errors.push("mobile pageerror: " + e.message));
   await m.goto("http://localhost:4179/");
   await m.evaluate(() => {});
-  await m.getByRole("button", { name: /Essayer avec la démo/ }).click();
+  await m.getByRole("button", { name: /Charger les données de test/ }).click();
   await m.getByRole("heading", { name: "Aujourd'hui" }).waitFor();
   const overflow = await m.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   if (overflow > 1) throw new Error("défilement horizontal sur mobile : " + overflow + "px");

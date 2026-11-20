@@ -10,6 +10,10 @@ import { computeWeights, exerciseTypes, cardsFromNotions, verifyExcerpt } from "
 import { analyzeCourse, analyzeAnnales } from "./ai/tasks";
 import { aiAvailable, onAiCall } from "./ai/client";
 import { extractFile } from "./ingest";
+import { IS_LOCAL } from "./env";
+
+const DEMO_ID = "demo-analyse";
+const DEMO_DOCS = ["demo-cours", "demo-annale-2025", "demo-annale-2024"];
 
 export const COLORS = ["#2B59C3", "#C2410C", "#0F766E", "#7C3AED", "#B45309", "#BE185D"];
 
@@ -89,7 +93,28 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       try { loaded = st.remote ? await st.remote.get<AppState>("state") : null; } catch { /* réseau */ }
       if (!loaded) { try { loaded = await st.local.get<AppState>("state"); } catch { /* vide */ } }
       if (!alive) return;
-      if (loaded?.version === 1) setState({ ...emptyState(), ...loaded });
+      if (loaded?.version === 1) {
+        const st0: AppState = { ...emptyState(), ...loaded };
+        // La démo n'est plus proposée : on la retire des données existantes (matière, blocs, documents).
+        if (!IS_LOCAL && st0.subjects.some((x) => x.id === DEMO_ID)) {
+          st0.subjects = st0.subjects.filter((x) => x.id !== DEMO_ID);
+          st0.forecasts = st0.forecasts.filter((p) => p.subjectId !== DEMO_ID);
+          if (st0.plan) st0.plan.days = st0.plan.days.map((d) => ({ ...d, blocks: d.blocks.filter((b) => b.subjectId !== DEMO_ID) }));
+          if (st0.subjects.length) {
+            const r = replan(st0, todayISO(), ["Démo supprimée."]);
+            st0.plan = r.plan;
+            st0.planChanges = [r.change, ...st0.planChanges];
+          } else {
+            st0.plan = null;
+            st0.planChanges = [];
+          }
+          for (const id of DEMO_DOCS) {
+            st.local.remove(`doc-${id}`).catch(() => {});
+            st.remote?.remove(`doc-${id}`).catch(() => {});
+          }
+        }
+        setState(st0);
+      }
       setReady(true);
       setSaveStatus("enregistre");
       setAiLive(await aiAvailable());

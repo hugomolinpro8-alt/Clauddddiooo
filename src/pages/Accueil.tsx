@@ -4,6 +4,10 @@ import { useUI } from "../ui-state";
 import { Button, Card, Grade, Badge, Bar } from "../components/ui";
 import { diffDays, formatDay } from "../lib/dates";
 import { forecastSubject } from "../lib/forecast";
+import { IS_LOCAL } from "../lib/env";
+
+// Les données de test ne sont proposées qu'en développement local, jamais sur claude.ai.
+const DEV = IS_LOCAL;
 
 export function Accueil() {
   const { state, today, loadDemo } = useApp();
@@ -23,9 +27,11 @@ export function Accueil() {
           <p className="text-muted max-w-xl">Donne au coach ton cours et tes annales. Il repère ce qui tombe vraiment, te fait travailler chaque jour en exercices plutôt qu'en relecture, et réadapte le plan quand tu prends du retard.</p>
           <div className="flex flex-wrap gap-3">
             <Button onClick={() => go("nouvelle-matiere")}>Ajouter ma première matière</Button>
-            <Button variant="secondary" loading={loading} onClick={async () => { setLoading(true); await loadDemo(); setSubjectId("demo-analyse"); setLoading(false); go("aujourdhui"); }}>
-              Essayer avec la démo (Analyse 1)
-            </Button>
+            {DEV && (
+              <Button variant="secondary" loading={loading} onClick={async () => { setLoading(true); await loadDemo(); setSubjectId("demo-analyse"); setLoading(false); go("aujourdhui"); }}>
+                Charger les données de test
+              </Button>
+            )}
           </div>
         </div>
         <Card className="flex flex-col gap-4">

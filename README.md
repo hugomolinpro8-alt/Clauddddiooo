@@ -15,7 +15,7 @@ L'app est publiée comme **page claude.ai privée** (un « Artifact »). Ouvre s
 
 1. Au premier appel IA, claude.ai te demande d'**autoriser la page à utiliser Claude**. Accepte : l'IA tourne sur ton compte.
 2. Tes données (matières, progression, documents) sont enregistrées **en ligne, en privé** dans ton espace (`data/users/<toi>/…`). Personne d'autre ne les voit, même si tu partages le lien. Une copie de secours est aussi gardée dans le navigateur.
-3. Pour tester sans rien importer : **« Essayer avec la démo »** charge un faux cours d'Analyse 1 (suites, limites, dérivées) et deux fausses annales déjà analysées.
+3. Commence par **« Ajouter ma première matière »**, puis importe ton cours et tes annales.
 
 ### Coût
 
@@ -39,7 +39,7 @@ L'app est publiée comme **page claude.ai privée** (un « Artifact »). Ouvre s
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173 (IA simulée, sauvegarde dans le navigateur)
+npm run dev        # http://localhost:5173 (IA simulée, sauvegarde dans le navigateur, bouton « Charger les données de test »)
 npm test           # tests unitaires (planning, SM-2, maîtrise, prévision, vérification maths…)
 npm run build      # vérifie les types, construit dist/index.html (fichier unique) et artifact/coach-partiels.html
 npm run e2e        # après le build : parcours complet dans Chromium (Playwright requis)
