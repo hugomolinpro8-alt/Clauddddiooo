@@ -50,6 +50,19 @@ MAX_RECYCLES = 1
 MAX_ANNUL = 2
 AIDE = 3
 
+# Mémo des commandes, affiché à droite du plateau à chaque tour
+MEMO = ["COMMANDES",
+        "p         piocher",
+        "d 3       défausse -> colonne 3",
+        "d f       défausse -> fondation",
+        "f 5       colonne 5 -> fondation",
+        "r 1 4     fondation 1 -> colonne 4",
+        "c 2 6     colonne 2 -> colonne 6",
+        "c 2 6 3   (3 = nombre de cartes)",
+        "a aide    j ordinateur",
+        "u annuler   s sauver",
+        "q quitter   ? règles"]
+
 NIVEAUX = [["Facile", [1, None, None, True]],
            ["Moyen", [1, 3, 5, True]],
            ["Difficile", [3, 2, 0, False]]]
@@ -91,7 +104,9 @@ def afficher(etat):
             ligne = ligne + "   F" + str(f + 1) + ":" + SYMBOLES[f] + "-"
     print(ligne)
 
-    print("\nC1   C2   C3   C4   C5   C6   C7")
+    # Les colonnes sont écrites ligne par ligne dans la liste lignes,
+    # puis chaque ligne est affichée avec, à droite, une ligne du mémo des commandes.
+    lignes = ["C1   C2   C3   C4   C5   C6   C7   "]
     hauteur = 1
     for col in etat[COLONNES]:
         if len(col[CACHEES]) + len(col[VISIBLES]) > hauteur:
@@ -108,7 +123,15 @@ def afficher(etat):
                 ligne = ligne + "[ ]  "
             else:
                 ligne = ligne + "     "
-        print(ligne)
+        lignes.append(ligne)
+    while len(lignes) < len(MEMO):           # plateau plus court que le mémo
+        lignes.append(" " * 35)
+    print()
+    for n in range(len(lignes)):
+        if n < len(MEMO):
+            print(lignes[n] + "  | " + MEMO[n])
+        else:
+            print(lignes[n])
     print("\nCoups joués :", etat[COUPS])
 
 
