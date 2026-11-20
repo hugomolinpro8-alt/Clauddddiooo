@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 100" width="440" height="100">
+<g transform="translate(0,12) scale(1.25)">
+<polygon points="40,60 66,14 96,60" fill="#9FB3C8"/>
+<polygon points="0,60 34,3 70,60" fill="#0E1A2B"/>
+<path d="M17 31 L23 27 L28 32 L34 26 L40 32 L46 28 L52 32" stroke="#FFFFFF" stroke-width="3" fill="none" stroke-linejoin="round" stroke-linecap="round"/>
+<path d="M34 6 C29 20 42 30 35 42 C31 49 36 55 34 60" stroke="#FF5A1F" stroke-width="4" fill="none" stroke-linecap="round"/>
+</g>
+<text x="140" y="87" font-family="Anton, Impact, sans-serif" font-size="72" letter-spacing="4" fill="#0E1A2B">GOGGLES</text>
+</svg>

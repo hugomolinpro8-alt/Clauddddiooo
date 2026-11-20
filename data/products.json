@@ -1,0 +1,250 @@
+[
+  {
+    "id": "gg-01",
+    "slug": "modele-01",
+    "nom": "Masque Red Bull SPECT MODÈLE 01",
+    "modele": "MODÈLE 01",
+    "coloris": "[À REMPLIR]",
+    "prix": 189,
+    "etat": "neuf-avec-etiquette",
+    "stock": 2,
+    "couleurDAmbiance": "#2C5D8F",
+    "teinteVerre": "#FF8A3D",
+    "couleurVerre": "[À REMPLIR]",
+    "categorieVerre": "S2",
+    "taille": "M",
+    "accroche": "[À REMPLIR] Une phrase courte qui donne envie.",
+    "description": "[À REMPLIR] Description du masque : usage, sensations, points forts. Aucune donnée technique inventée.",
+    "caracteristiques": [
+      "Écran : [À REMPLIR]",
+      "Verre : [À REMPLIR]",
+      "Ventilation : [À REMPLIR]",
+      "Mousse : [À REMPLIR]",
+      "Sangle : [À REMPLIR]",
+      "Compatibilité casque : [À REMPLIR]"
+    ],
+    "photos": [
+      "/products/modele-01/photo-1.webp",
+      "/products/modele-01/photo-2.webp",
+      "/products/modele-01/photo-3.webp",
+      "/products/modele-01/photo-4.webp"
+    ],
+    "photoDetouree": "/products/modele-01/detoure.png",
+    "sequence360": {
+      "dossier": "/products/modele-01/360",
+      "images": 24,
+      "extension": "webp"
+    },
+    "modele3d": null,
+    "variantes": [
+      {
+        "id": "gg-01-a",
+        "etat": "neuf-avec-etiquette",
+        "stock": 1,
+        "prix": 189,
+        "couleurVerre": "[À REMPLIR]",
+        "categorieVerre": "S2",
+        "taille": "M"
+      },
+      {
+        "id": "gg-01-b",
+        "etat": "tres-bon-etat",
+        "stock": 1,
+        "prix": 159,
+        "couleurVerre": "[À REMPLIR]",
+        "categorieVerre": "S2",
+        "taille": "M"
+      }
+    ]
+  },
+  {
+    "id": "gg-02",
+    "slug": "modele-02",
+    "nom": "Masque Red Bull SPECT MODÈLE 02",
+    "modele": "MODÈLE 02",
+    "coloris": "[À REMPLIR]",
+    "prix": 149,
+    "etat": "tres-bon-etat",
+    "stock": 1,
+    "couleurDAmbiance": "#6B4C9A",
+    "teinteVerre": "#7FD3FF",
+    "couleurVerre": "[À REMPLIR]",
+    "categorieVerre": "S3",
+    "taille": "L",
+    "accroche": "[À REMPLIR] Une phrase courte qui donne envie.",
+    "description": "[À REMPLIR] Description du masque : usage, sensations, points forts. Aucune donnée technique inventée.",
+    "caracteristiques": [
+      "Écran : [À REMPLIR]",
+      "Verre : [À REMPLIR]",
+      "Ventilation : [À REMPLIR]",
+      "Mousse : [À REMPLIR]",
+      "Sangle : [À REMPLIR]",
+      "Compatibilité casque : [À REMPLIR]"
+    ],
+    "photos": [
+      "/products/modele-02/photo-1.webp",
+      "/products/modele-02/photo-2.webp",
+      "/products/modele-02/photo-3.webp",
+      "/products/modele-02/photo-4.webp"
+    ],
+    "photoDetouree": "/products/modele-02/detoure.png",
+    "sequence360": {
+      "dossier": "/products/modele-02/360",
+      "images": 24,
+      "extension": "webp"
+    },
+    "modele3d": null
+  },
+  {
+    "id": "gg-03",
+    "slug": "modele-03",
+    "nom": "Masque Red Bull SPECT MODÈLE 03",
+    "modele": "MODÈLE 03",
+    "coloris": "[À REMPLIR]",
+    "prix": 219,
+    "etat": "neuf-sans-boite",
+    "stock": 0,
+    "couleurDAmbiance": "#2F6E5B",
+    "teinteVerre": "#C9A2FF",
+    "couleurVerre": "[À REMPLIR]",
+    "categorieVerre": "S1",
+    "taille": "M",
+    "accroche": "[À REMPLIR] Une phrase courte qui donne envie.",
+    "description": "[À REMPLIR] Description du masque : usage, sensations, points forts. Aucune donnée technique inventée.",
+    "caracteristiques": [
+      "Écran : [À REMPLIR]",
+      "Verre : [À REMPLIR]",
+      "Ventilation : [À REMPLIR]",
+      "Mousse : [À REMPLIR]",
+      "Sangle : [À REMPLIR]",
+      "Compatibilité casque : [À REMPLIR]"
+    ],
+    "photos": [
+      "/products/modele-03/photo-1.webp",
+      "/products/modele-03/photo-2.webp",
+      "/products/modele-03/photo-3.webp",
+      "/products/modele-03/photo-4.webp"
+    ],
+    "photoDetouree": "/products/modele-03/detoure.png",
+    "sequence360": {
+      "dossier": "/products/modele-03/360",
+      "images": 24,
+      "extension": "webp"
+    },
+    "modele3d": null
+  },
+  {
+    "id": "gg-04",
+    "slug": "modele-04",
+    "nom": "Masque Red Bull SPECT MODÈLE 04",
+    "modele": "MODÈLE 04",
+    "coloris": "[À REMPLIR]",
+    "prix": 129,
+    "etat": "bon-etat",
+    "stock": 1,
+    "couleurDAmbiance": "#A8492C",
+    "teinteVerre": "#FFD34D",
+    "couleurVerre": "[À REMPLIR]",
+    "categorieVerre": "S3",
+    "taille": "L",
+    "accroche": "[À REMPLIR] Une phrase courte qui donne envie.",
+    "description": "[À REMPLIR] Description du masque : usage, sensations, points forts. Aucune donnée technique inventée.",
+    "caracteristiques": [
+      "Écran : [À REMPLIR]",
+      "Verre : [À REMPLIR]",
+      "Ventilation : [À REMPLIR]",
+      "Mousse : [À REMPLIR]",
+      "Sangle : [À REMPLIR]",
+      "Compatibilité casque : [À REMPLIR]"
+    ],
+    "photos": [
+      "/products/modele-04/photo-1.webp",
+      "/products/modele-04/photo-2.webp",
+      "/products/modele-04/photo-3.webp",
+      "/products/modele-04/photo-4.webp"
+    ],
+    "photoDetouree": "/products/modele-04/detoure.png",
+    "sequence360": {
+      "dossier": "/products/modele-04/360",
+      "images": 24,
+      "extension": "webp"
+    },
+    "modele3d": null
+  },
+  {
+    "id": "gg-05",
+    "slug": "modele-05",
+    "nom": "Masque Red Bull SPECT MODÈLE 05",
+    "modele": "MODÈLE 05",
+    "coloris": "[À REMPLIR]",
+    "prix": 169,
+    "etat": "neuf-avec-etiquette",
+    "stock": 3,
+    "couleurDAmbiance": "#2F8496",
+    "teinteVerre": "#9BE7C4",
+    "couleurVerre": "[À REMPLIR]",
+    "categorieVerre": "S2",
+    "taille": "S",
+    "accroche": "[À REMPLIR] Une phrase courte qui donne envie.",
+    "description": "[À REMPLIR] Description du masque : usage, sensations, points forts. Aucune donnée technique inventée.",
+    "caracteristiques": [
+      "Écran : [À REMPLIR]",
+      "Verre : [À REMPLIR]",
+      "Ventilation : [À REMPLIR]",
+      "Mousse : [À REMPLIR]",
+      "Sangle : [À REMPLIR]",
+      "Compatibilité casque : [À REMPLIR]"
+    ],
+    "photos": [
+      "/products/modele-05/photo-1.webp",
+      "/products/modele-05/photo-2.webp",
+      "/products/modele-05/photo-3.webp",
+      "/products/modele-05/photo-4.webp"
+    ],
+    "photoDetouree": "/products/modele-05/detoure.png",
+    "sequence360": {
+      "dossier": "/products/modele-05/360",
+      "images": 24,
+      "extension": "webp"
+    },
+    "modele3d": null
+  },
+  {
+    "id": "gg-06",
+    "slug": "modele-06",
+    "nom": "Masque Red Bull SPECT MODÈLE 06",
+    "modele": "MODÈLE 06",
+    "coloris": "[À REMPLIR]",
+    "prix": 239,
+    "etat": "tres-bon-etat",
+    "stock": 1,
+    "couleurDAmbiance": "#545E72",
+    "teinteVerre": "#E6EEF5",
+    "couleurVerre": "[À REMPLIR]",
+    "categorieVerre": "S4",
+    "taille": "M",
+    "accroche": "[À REMPLIR] Une phrase courte qui donne envie.",
+    "description": "[À REMPLIR] Description du masque : usage, sensations, points forts. Aucune donnée technique inventée.",
+    "caracteristiques": [
+      "Écran : [À REMPLIR]",
+      "Verre : [À REMPLIR]",
+      "Ventilation : [À REMPLIR]",
+      "Mousse : [À REMPLIR]",
+      "Sangle : [À REMPLIR]",
+      "Compatibilité casque : [À REMPLIR]"
+    ],
+    "photos": [
+      "/products/modele-06/photo-1.webp",
+      "/products/modele-06/photo-2.webp",
+      "/products/modele-06/photo-3.webp",
+      "/products/modele-06/photo-4.webp"
+    ],
+    "photoDetouree": "/products/modele-06/detoure.png",
+    "sequence360": {
+      "dossier": "/products/modele-06/360",
+      "images": 24,
+      "extension": "webp"
+    },
+    "modele3d": null
+  }
+]
