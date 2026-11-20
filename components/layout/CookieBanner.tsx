@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 
 type Consentement = { necessaires: true; mesure: boolean; marketing: boolean; date: string };
 const CLE = "goggles:cookies";
@@ -52,7 +52,7 @@ export function CookieBanner() {
   return (
     <AnimatePresence>
       {visible && (
-        <motion.section
+        <m.section
           role="dialog"
           aria-modal="false"
           aria-labelledby="cookies-titre"
@@ -103,7 +103,7 @@ export function CookieBanner() {
               </button>
             )}
           </div>
-        </motion.section>
+        </m.section>
       )}
     </AnimatePresence>
   );

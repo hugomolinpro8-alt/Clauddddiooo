@@ -18,13 +18,14 @@ export function TechnologieVue() {
   useTonEntete("fonce");
   const root = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(-1);
-  const lenis = useLenis();
+  // Synchronise ScrollTrigger avec le défilement fluide Lenis
+  const lenis = useLenis(() => ScrollTrigger.update());
 
   useLayoutEffect(() => {
     const el = root.current;
     if (!el) return;
     const reduit = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const ctx = gsap.context(() => {
+    const ctx = gsap.context((self) => {
       // Citation : mot à mot
       const citation = SplitText.create("[data-citation]", { type: "words", aria: "auto" });
       if (!reduit) {
@@ -36,14 +37,24 @@ export function TechnologieVue() {
         // Étape active → navigation sticky
         ScrollTrigger.create({ trigger: s, start: "top 55%", end: "bottom 55%", onToggle: (st) => st.isActive && setActive(i) });
         if (reduit) return;
-        // Parallaxe de la scène
-        gsap.fromTo(s.querySelector("[data-scene]"), { yPercent: -10, scale: 1.15 }, { yPercent: 10, scale: 1.05, ease: "none", scrollTrigger: { trigger: s, start: "top bottom", end: "bottom top", scrub: true } });
-        // Grand titre espacé : lettres qui se resserrent
-        const titre = SplitText.create(s.querySelector("[data-titre]"), { type: "chars", aria: "auto" });
-        gsap.from(titre.chars, { opacity: 0, yPercent: 60, rotate: 6, stagger: 0.03, duration: 1, ease: "expo.out", scrollTrigger: { trigger: s, start: "top 65%" } });
-        // Texte : révélé mot à mot au défilement
-        const texte = SplitText.create(s.querySelector("[data-texte]"), { type: "words", aria: "auto" });
-        gsap.fromTo(texte.words, { opacity: 0.12 }, { opacity: 1, stagger: 0.1, ease: "none", scrollTrigger: { trigger: s.querySelector("[data-texte]"), start: "top 85%", end: "bottom 50%", scrub: true } });
+        // Préparation paresseuse : chaque étape n'est découpée/animée qu'à l'approche de l'écran
+        // (évite une longue tâche au chargement → meilleur TBT sur mobile)
+        ScrollTrigger.create({
+          trigger: s,
+          start: "top bottom+=300",
+          once: true,
+          onEnter: () =>
+            self.add(() => {
+              // Parallaxe de la scène
+              gsap.fromTo(s.querySelector("[data-scene]"), { yPercent: -10, scale: 1.15 }, { yPercent: 10, scale: 1.05, ease: "none", scrollTrigger: { trigger: s, start: "top bottom", end: "bottom top", scrub: true } });
+              // Grand titre espacé : lettres une à une
+              const titre = SplitText.create(s.querySelector("[data-titre]"), { type: "chars", aria: "auto" });
+              gsap.from(titre.chars, { opacity: 0, yPercent: 60, rotate: 6, stagger: 0.03, duration: 1, ease: "expo.out", scrollTrigger: { trigger: s, start: "top 65%" } });
+              // Texte : révélé mot à mot au défilement
+              const texte = SplitText.create(s.querySelector("[data-texte]"), { type: "words", aria: "auto" });
+              gsap.fromTo(texte.words, { opacity: 0.12 }, { opacity: 1, stagger: 0.1, ease: "none", scrollTrigger: { trigger: s.querySelector("[data-texte]"), start: "top 85%", end: "bottom 50%", scrub: true } });
+            }),
+        });
       });
       gsap.from("[data-faq]", { opacity: 0, y: 40, duration: 1, ease: "expo.out", scrollTrigger: { trigger: "[data-faq]", start: "top 80%" } });
     }, el);

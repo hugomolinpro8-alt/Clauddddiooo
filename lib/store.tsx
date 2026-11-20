@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { LazyMotion } from "motion/react";
 import type { LignePanier, Produit, Variante } from "./commerce/types";
 import { variantesDe } from "./commerce/catalog";
 
@@ -87,6 +88,8 @@ interface Favoris {
 }
 const FavorisCtx = createContext<Favoris | null>(null);
 
+const chargerAnimations = () => import("./motion-features").then((r) => r.default);
+
 export function Providers({ produits, children }: { produits: Produit[]; children: ReactNode }) {
   const [menuOuvert, setMenuOuvert] = useState(false);
   const [panierOuvert, setPanierOuvert] = useState(false);
@@ -161,7 +164,12 @@ export function Providers({ produits, children }: { produits: Produit[]; childre
   return (
     <UICtx.Provider value={ui}>
       <PanierCtx.Provider value={panier}>
-        <FavorisCtx.Provider value={favoris}>{children}</FavorisCtx.Provider>
+        <FavorisCtx.Provider value={favoris}>
+          {/* Framer Motion : fonctionnalités chargées en différé (bundle initial plus léger) */}
+          <LazyMotion features={chargerAnimations} strict>
+            {children}
+          </LazyMotion>
+        </FavorisCtx.Provider>
       </PanierCtx.Provider>
     </UICtx.Provider>
   );

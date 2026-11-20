@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import { Logo } from "@/components/brand/Logo";
 
 const CLE = "goggles:loader-vu";
@@ -32,13 +32,19 @@ export function Loader({ onTermine }: { onTermine: () => void }) {
     if (etat === "sortie") onTermine();
   }, [etat, onTermine]);
 
+  // Filet de sécurité : le loader ne bloque jamais l'accès au site
+  useEffect(() => {
+    const t = setTimeout(() => setEtat((e) => (e === "actif" ? "sortie" : e)), 4500);
+    return () => clearTimeout(t);
+  }, []);
+
   // Déjà vu pendant cette session : retiré sans animation
   if (dejaVu) return null;
 
   return (
     <AnimatePresence onExitComplete={() => setEtat("fini")}>
       {etat === "actif" && (
-        <motion.div
+        <m.div
           key="loader"
           role="status"
           aria-label="Chargement"
@@ -47,11 +53,11 @@ export function Loader({ onTermine }: { onTermine: () => void }) {
           transition={{ duration: 1, ease: [0.76, 0, 0.24, 1] }}
           style={{ clipPath: "inset(0 0 0% 0)" }}
         >
-          <motion.div exit={{ y: -60, opacity: 0 }} transition={{ duration: 0.7, ease: [0.76, 0, 0.24, 1] }}>
+          <m.div exit={{ y: -60, opacity: 0 }} transition={{ duration: 0.7, ease: [0.76, 0, 0.24, 1] }}>
             <Logo variant="fonce" animate className="w-[min(78vw,460px)]" onAnimationComplete={() => setTimeout(() => setEtat("sortie"), 350)} />
-          </motion.div>
+          </m.div>
           <p className="label absolute bottom-10 text-glacier">Masques de ski authentiques</p>
-        </motion.div>
+        </m.div>
       )}
     </AnimatePresence>
   );

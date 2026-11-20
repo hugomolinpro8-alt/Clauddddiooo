@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useId, useLayoutEffect, useRef } from "react";
-import gsap from "gsap";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -37,7 +36,12 @@ export function Logo({ variant = "clair", symbolOnly = false, animate = false, o
     if (!animate || !root.current) return;
     const el = root.current;
     const reduit = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const ctx = gsap.context(() => {
+    let ctx: { revert: () => void } | undefined;
+    let annule = false;
+    // GSAP n'est chargé que lorsque le logo s'anime (loader) : il ne pèse pas sur les autres pages
+    import("gsap").then(({ default: gsap }) => {
+      if (annule) return;
+      ctx = gsap.context(() => {
       const trace = el.querySelector<SVGPathElement>("[data-trace]");
       const zz = el.querySelector<SVGPathElement>("[data-zigzag]");
       const len = trace?.getTotalLength() ?? 80;
@@ -54,8 +58,12 @@ export function Logo({ variant = "clair", symbolOnly = false, animate = false, o
       if (trace)
         tl.fromTo(trace, { strokeDasharray: len, strokeDashoffset: len }, { strokeDashoffset: 0, duration: 0.9, ease: "power2.inOut" }, "-=0.15");
       if (!symbolOnly) tl.from("[data-lettre]", { opacity: 0, duration: 0.28, stagger: 0.075, ease: "power1.out" }, "-=0.35");
-    }, el);
-    return () => ctx.revert();
+      }, el);
+    });
+    return () => {
+      annule = true;
+      ctx?.revert();
+    };
   }, [animate, symbolOnly]);
 
   const symbole = (

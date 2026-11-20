@@ -27,7 +27,7 @@ export function MiniCarrousel({ produits, titre = "Les autres masques" }: { prod
       <ul
         ref={piste}
         data-lenis-prevent
-        className="mt-8 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-smooth px-4 pb-4 [scrollbar-width:none] sm:gap-6 sm:px-8 [&::-webkit-scrollbar]:hidden"
+        className="mt-8 flex snap-x snap-proximity gap-4 overflow-x-auto px-4 pb-4 [scrollbar-width:none] sm:gap-6 sm:px-8 [&::-webkit-scrollbar]:hidden"
       >
         {produits.map((p) => (
           <li key={p.id} className="w-[78vw] shrink-0 snap-start sm:w-[42vw] lg:w-[28vw] xl:w-[22vw]">

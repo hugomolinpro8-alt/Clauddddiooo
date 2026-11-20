@@ -52,7 +52,7 @@ export function FicheProduit({ produit, autres }: { produit: Produit; autres: Pr
             <div className="flex flex-wrap items-center gap-2">
               <span className="label rounded-full bg-white px-3 py-1.5 text-[10px] text-nuit ring-1 ring-nuit/10">{produit.modele}</span>
               {badge && (
-                <span className={cn("label rounded-full px-3 py-1.5 text-[10px]", badge === "vendu" ? "bg-nuit text-white" : "bg-orange text-white")}>
+                <span className={cn("label rounded-full px-3 py-1.5 text-[10px]", badge === "vendu" ? "bg-nuit text-white" : "bg-orange text-nuit")}>
                   {badge === "vendu" ? "Vendu" : "Pièce unique"}
                 </span>
               )}

@@ -110,9 +110,10 @@ html.lenis body {
     opacity: 0.45;
     cursor: not-allowed;
   }
+  /* Texte bleu nuit sur orange : contraste 6,4:1 (le blanc ne fait que 3:1, insuffisant en petit texte) */
   .btn-achat {
     background: var(--color-orange);
-    color: #fff;
+    color: var(--color-nuit);
   }
   .btn-achat:not(:disabled):hover {
     background: var(--color-orange-fonce);

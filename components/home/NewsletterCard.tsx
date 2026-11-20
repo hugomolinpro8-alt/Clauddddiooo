@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import { Mail, X } from "lucide-react";
 import { NewsletterForm } from "@/components/ui/NewsletterForm";
 import { cn } from "@/lib/utils";
@@ -36,7 +36,7 @@ export function NewsletterCard({ compacte = false, className }: { compacte?: boo
   return (
     <AnimatePresence>
       {!fermee && (
-        <motion.aside
+        <m.aside
           aria-label="Newsletter"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -68,7 +68,7 @@ export function NewsletterCard({ compacte = false, className }: { compacte?: boo
               </button>
             </span>
           )}
-        </motion.aside>
+        </m.aside>
       )}
     </AnimatePresence>
   );

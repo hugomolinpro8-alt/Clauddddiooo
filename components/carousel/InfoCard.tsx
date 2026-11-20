@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { Eye, Heart, ShieldCheck } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import type { Produit } from "@/lib/commerce/types";
 import { ETATS } from "@/lib/commerce/types";
 import { badgeStock, varianteParDefaut } from "@/lib/commerce/catalog";
@@ -45,15 +45,15 @@ export function InfoCard({ produit, index, total }: { produit: Produit; index: n
         </p>
         <AnimatePresence mode="wait">
           {badge && (
-            <motion.span
+            <m.span
               key={badge + produit.id}
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
-              className={cn("label rounded-full px-3 py-1.5 text-[10px]", badge === "vendu" ? "bg-white/90 text-nuit" : "bg-orange text-white")}
+              className={cn("label rounded-full px-3 py-1.5 text-[10px]", badge === "vendu" ? "bg-white/90 text-nuit" : "bg-orange text-nuit")}
             >
               {badge === "vendu" ? "Vendu" : "Pièce unique"}
-            </motion.span>
+            </m.span>
           )}
         </AnimatePresence>
       </div>
@@ -94,9 +94,9 @@ export function InfoCard({ produit, index, total }: { produit: Produit; index: n
           aria-label={favori ? `Retirer ${produit.modele} des favoris` : `Ajouter ${produit.modele} aux favoris`}
           className={cn("rond h-12 w-12 shrink-0 sm:h-[3.25rem] sm:w-[3.25rem]", favori && "text-orange")}
         >
-          <motion.span key={String(favori)} initial={{ scale: 0.6 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 500, damping: 15 }}>
+          <m.span key={String(favori)} initial={{ scale: 0.6 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 500, damping: 15 }}>
             <Heart size={18} strokeWidth={1.8} fill={favori ? "currentColor" : "none"} />
-          </motion.span>
+          </m.span>
         </button>
       </div>
       <Link href={`/produit/${produit.slug}`} className="btn btn-verre mt-2 hidden h-11 sm:inline-flex">

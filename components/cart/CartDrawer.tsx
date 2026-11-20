@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState, useTransition } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import { Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react";
 import { usePanier, useUI } from "@/lib/store";
 import { ETATS } from "@/lib/commerce/types";
@@ -44,9 +44,9 @@ export function CartDrawer() {
   return (
     <AnimatePresence>
       {panierOuvert && (
-        <motion.div key="panier" className="fixed inset-0 z-[65]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, transition: { delay: 0.15 } }}>
+        <m.div key="panier" className="fixed inset-0 z-[65]" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, transition: { delay: 0.15 } }}>
           <button type="button" aria-label="Fermer le panier" className="absolute inset-0 cursor-default bg-nuit/45 backdrop-blur-[3px]" onClick={() => setPanierOuvert(false)} />
-          <motion.div
+          <m.div
             ref={panneau}
             role="dialog"
             aria-modal="true"
@@ -83,7 +83,7 @@ export function CartDrawer() {
                 <ul className="flex-1 space-y-3 overflow-y-auto px-6 py-2">
                   <AnimatePresence initial={false}>
                     {lignes.map((l, i) => (
-                      <motion.li
+                      <m.li
                         key={l.varianteId}
                         layout
                         initial={{ opacity: 0, x: 40 }}
@@ -125,7 +125,7 @@ export function CartDrawer() {
                         <button type="button" className="self-start p-1 text-ardoise hover:text-orange" aria-label={`Retirer ${l.produit.nom}`} onClick={() => retirer(l.varianteId)}>
                           <Trash2 size={15} />
                         </button>
-                      </motion.li>
+                      </m.li>
                     ))}
                   </AnimatePresence>
                 </ul>
@@ -166,8 +166,8 @@ export function CartDrawer() {
                 </div>
               </>
             )}
-          </motion.div>
-        </motion.div>
+          </m.div>
+        </m.div>
       )}
     </AnimatePresence>
   );

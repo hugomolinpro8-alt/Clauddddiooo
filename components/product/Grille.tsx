@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import { SlidersHorizontal, X } from "lucide-react";
 import type { Etat, Produit } from "@/lib/commerce/types";
 import { ETATS } from "@/lib/commerce/types";
@@ -120,10 +120,10 @@ export function Grille({ produits }: { produits: Produit[] }) {
           <p className="mb-5 text-sm text-ardoise" aria-live="polite">
             {resultat.length} masque{resultat.length > 1 ? "s" : ""}
           </p>
-          <motion.ul layout className="grid gap-x-6 gap-y-12 sm:grid-cols-2 xl:grid-cols-3">
+          <m.ul layout className="grid gap-x-6 gap-y-12 sm:grid-cols-2 xl:grid-cols-3">
             <AnimatePresence mode="popLayout">
               {resultat.map((p, i) => (
-                <motion.li
+                <m.li
                   key={p.id}
                   layout
                   initial={{ opacity: 0, y: 30 }}
@@ -131,10 +131,10 @@ export function Grille({ produits }: { produits: Produit[] }) {
                   exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.25 } }}
                 >
                   <CarteProduit produit={p} priorite={i < 3} />
-                </motion.li>
+                </m.li>
               ))}
             </AnimatePresence>
-          </motion.ul>
+          </m.ul>
           {resultat.length === 0 && <p className="py-20 text-center text-ardoise">Aucun masque ne correspond à ces filtres.</p>}
         </div>
       </div>
@@ -142,9 +142,9 @@ export function Grille({ produits }: { produits: Produit[] }) {
       {/* Panneau de filtres mobile */}
       <AnimatePresence>
         {panneau && (
-          <motion.div className="fixed inset-0 z-[55] lg:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+          <m.div className="fixed inset-0 z-[55] lg:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <button type="button" aria-label="Fermer les filtres" className="absolute inset-0 bg-nuit/40" onClick={() => setPanneau(false)} />
-            <motion.div
+            <m.div
               role="dialog"
               aria-modal="true"
               aria-label="Filtres"
@@ -165,8 +165,8 @@ export function Grille({ produits }: { produits: Produit[] }) {
               <button type="button" onClick={() => setPanneau(false)} className="btn btn-nuit mt-8 w-full">
                 Voir {resultat.length} masque{resultat.length > 1 ? "s" : ""}
               </button>
-            </motion.div>
-          </motion.div>
+            </m.div>
+          </m.div>
         )}
       </AnimatePresence>
     </div>

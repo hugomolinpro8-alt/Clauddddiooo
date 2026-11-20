@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import { Heart, ShoppingBag } from "lucide-react";
 import { Logo } from "@/components/brand/Logo";
 import { useFavoris, usePanier, useUI } from "@/lib/store";
@@ -32,7 +32,7 @@ export function Header() {
       <nav aria-label="Actions" className="pointer-events-auto flex items-center gap-2 sm:gap-3">
         <AnimatePresence>
           {contactVisible && !menuOuvert && (
-            <motion.div
+            <m.div
               initial={{ opacity: 0, y: -12, filter: "blur(6px)" }}
               animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
               exit={{ opacity: 0, y: -12 }}
@@ -42,7 +42,7 @@ export function Header() {
               <Link href="/contact" className="btn btn-blanc roll-host h-12 px-6">
                 Contact
               </Link>
-            </motion.div>
+            </m.div>
           )}
         </AnimatePresence>
 
@@ -73,7 +73,7 @@ function Pastille({ n, orange }: { n: number; orange?: boolean }) {
   return (
     <AnimatePresence>
       {n > 0 && (
-        <motion.span
+        <m.span
           key={n}
           aria-hidden="true"
           initial={{ scale: 0.4, opacity: 0 }}
@@ -86,7 +86,7 @@ function Pastille({ n, orange }: { n: number; orange?: boolean }) {
           )}
         >
           {n}
-        </motion.span>
+        </m.span>
       )}
     </AnimatePresence>
   );
@@ -96,8 +96,8 @@ function Burger({ ouvert }: { ouvert: boolean }) {
   const t = { duration: 0.45, ease: [0.65, 0, 0.35, 1] as const };
   return (
     <span aria-hidden="true" className="relative block h-3 w-[18px]">
-      <motion.span className="absolute left-0 top-0 h-[1.8px] w-full rounded bg-current" animate={ouvert ? { y: 5, rotate: 45 } : { y: 0, rotate: 0 }} transition={t} />
-      <motion.span className="absolute bottom-0 left-0 h-[1.8px] w-full rounded bg-current" animate={ouvert ? { y: -5.2, rotate: -45 } : { y: 0, rotate: 0 }} transition={t} />
+      <m.span className="absolute left-0 top-0 h-[1.8px] w-full rounded bg-current" animate={ouvert ? { y: 5, rotate: 45 } : { y: 0, rotate: 0 }} transition={t} />
+      <m.span className="absolute bottom-0 left-0 h-[1.8px] w-full rounded bg-current" animate={ouvert ? { y: -5.2, rotate: -45 } : { y: 0, rotate: 0 }} transition={t} />
     </span>
   );
 }

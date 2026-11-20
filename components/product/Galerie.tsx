@@ -3,7 +3,7 @@
 import Image from "next/image";
 import dynamic from "next/dynamic";
 import { useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import { Box, Images, Rotate3d } from "lucide-react";
 import type { Produit } from "@/lib/commerce/types";
 import { cn } from "@/lib/utils";
@@ -30,7 +30,7 @@ export function Galerie({ produit }: { produit: Produit }) {
     <div className="lg:sticky lg:top-24">
       <div className="relative aspect-square w-full overflow-hidden rounded-[32px] bg-[#E9EEF3]">
         <AnimatePresence mode="wait" initial={false}>
-          <motion.div
+          <m.div
             key={vue + (vue === "photos" ? photo : "")}
             initial={{ opacity: 0, scale: 1.02 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -43,7 +43,7 @@ export function Galerie({ produit }: { produit: Produit }) {
             )}
             {vue === "360" && produit.sequence360 && <Viewer360 {...produit.sequence360} alt={produit.nom} />}
             {vue === "3d" && <Viewer3D glb={produit.modele3d} teinte={produit.teinteVerre} />}
-          </motion.div>
+          </m.div>
         </AnimatePresence>
 
         <div role="tablist" aria-label="Type de vue" className="absolute left-1/2 top-4 z-10 flex -translate-x-1/2 gap-1 rounded-full bg-white/80 p-1 backdrop-blur">

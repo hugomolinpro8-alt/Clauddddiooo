@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { animate, motion, useMotionValue, useMotionValueEvent, useTransform, type AnimationPlaybackControls, type MotionValue } from "motion/react";
+import { animate, m, useMotionValue, useMotionValueEvent, useTransform, type AnimationPlaybackControls, type MotionValue } from "motion/react";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import type { Produit } from "@/lib/commerce/types";
 import { cn, mixHex, mod, pad2 } from "@/lib/utils";
@@ -269,7 +269,7 @@ export function GoggleCarousel({ produits, initialSlug, syncUrl = false, classNa
       data-lenis-prevent-wheel
     >
       {/* Fond d'ambiance */}
-      <motion.div aria-hidden="true" className="absolute inset-0 -z-20" style={{ backgroundColor: fond }} />
+      <m.div aria-hidden="true" className="absolute inset-0 -z-20" style={{ backgroundColor: fond }} />
       <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10">
         <Image src="/scenes/carrousel.svg" alt="" fill unoptimized className="object-cover object-bottom opacity-[0.18] mix-blend-soft-light blur-[2px]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_40%,rgba(255,255,255,0.22),transparent_60%)]" />
@@ -383,7 +383,7 @@ function Emplacement({ k, pos, largeur, reduit, centre, children }: { k: number;
   const y = useTransform(pos, (p) => (reduit ? 0 : Math.min(Math.abs(k - p), 1) * 40));
   const actif = k === centre;
   return (
-    <motion.div
+    <m.div
       role="group"
       aria-roledescription="diapositive"
       aria-hidden={!actif}
@@ -391,7 +391,7 @@ function Emplacement({ k, pos, largeur, reduit, centre, children }: { k: number;
       style={{ x, y, rotate, rotateY, scale, opacity, zIndex: actif ? 2 : 1, transformPerspective: 1200 }}
     >
       {children}
-    </motion.div>
+    </m.div>
   );
 }
 
@@ -400,12 +400,12 @@ function NomGeant({ k, pos, largeur, nom, reduit }: { k: number; pos: MotionValu
   const x = useTransform([pos, largeur], ([p, w]: number[]) => (reduit ? 0 : (k - p) * w * ESPACEMENT * 0.45));
   const opacity = useTransform(pos, (p) => Math.max(0, 1 - Math.abs(k - p) * 1.15));
   return (
-    <motion.p
+    <m.p
       className="titre absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap text-[34vw] leading-none text-white/[0.13] sm:text-[24vw]"
       style={{ x, opacity }}
     >
       {nom}
-    </motion.p>
+    </m.p>
   );
 }
 
@@ -413,9 +413,9 @@ function Compteur({ index, total }: { index: number; total: number }) {
   return (
     <p className="label flex items-center gap-2 tabular-nums" aria-hidden="true">
       <span className="relative inline-block h-[1.4em] w-[2.2ch] overflow-hidden">
-        <motion.span key={index} className="absolute inset-0" initial={{ y: "100%" }} animate={{ y: 0 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}>
+        <m.span key={index} className="absolute inset-0" initial={{ y: "100%" }} animate={{ y: 0 }} transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}>
           {pad2(index + 1)}
-        </motion.span>
+        </m.span>
       </span>
       <span className="text-white/50">/</span>
       <span className="text-white/70">{pad2(total)}</span>
@@ -428,8 +428,8 @@ function Progression({ pos, n }: { pos: MotionValue<number>; n: number }) {
   const gauche2 = useTransform(pos, (p) => `${(mod(p, n) / n) * 100 - 100}%`);
   return (
     <div aria-hidden="true" className="absolute inset-x-0 bottom-0 z-10 h-[3px] overflow-hidden bg-white/15">
-      <motion.span className="absolute inset-y-0 bg-white" style={{ left: gauche, width: `${100 / n}%` }} />
-      <motion.span className="absolute inset-y-0 bg-white" style={{ left: gauche2, width: `${100 / n}%` }} />
+      <m.span className="absolute inset-y-0 bg-white" style={{ left: gauche, width: `${100 / n}%` }} />
+      <m.span className="absolute inset-y-0 bg-white" style={{ left: gauche2, width: `${100 / n}%` }} />
     </div>
   );
 }

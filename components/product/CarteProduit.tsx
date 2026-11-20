@@ -33,7 +33,7 @@ export function CarteProduit({ produit, priorite = false }: { produit: Produit; 
             className="absolute left-1/2 top-1/2 w-[88%] -translate-x-1/2 -translate-y-1/2 -rotate-6 drop-shadow-[0_24px_24px_rgba(0,0,0,0.3)] transition-transform duration-700 ease-[cubic-bezier(.16,1,.3,1)] group-hover:-rotate-2 group-hover:scale-105"
           />
           {badge && (
-            <span className={cn("label absolute left-4 top-4 rounded-full px-3 py-1.5 text-[10px]", badge === "vendu" ? "bg-white text-nuit" : "bg-orange text-white")}>
+            <span className={cn("label absolute left-4 top-4 rounded-full px-3 py-1.5 text-[10px]", badge === "vendu" ? "bg-white text-nuit" : "bg-orange text-nuit")}>
               {badge === "vendu" ? "Vendu" : "Pièce unique"}
             </span>
           )}

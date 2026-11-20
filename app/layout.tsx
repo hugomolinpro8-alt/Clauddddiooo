@@ -6,11 +6,8 @@ import { getProduits } from "@/lib/commerce";
 import { Providers } from "@/lib/store";
 import { SmoothScroll } from "@/components/layout/SmoothScroll";
 import { Header } from "@/components/layout/Header";
-import { Menu } from "@/components/layout/Menu";
-import { CookieBanner } from "@/components/layout/CookieBanner";
-import { CartDrawer } from "@/components/cart/CartDrawer";
 import { Annonceur } from "@/components/layout/Annonceur";
-import { RideauNavigation } from "@/components/layout/RideauNavigation";
+import { CalquesDifferes } from "@/components/layout/Differes";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE.url),
@@ -46,17 +43,14 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="fr" className={`${anton.variable} ${inter.variable} ${fraunces.variable}`}>
       <body>
-        <a href="#contenu" className="sr-only-focusable fixed left-4 top-4 z-[100] rounded-full bg-orange px-5 py-3 text-sm font-semibold text-white">
+        <a href="#contenu" className="sr-only-focusable fixed left-4 top-4 z-[100] rounded-full bg-orange px-5 py-3 text-sm font-semibold text-nuit">
           Aller au contenu
         </a>
         <Providers produits={produits}>
           <SmoothScroll>
             <Header />
-            <Menu />
-            <CartDrawer />
             <main id="contenu">{children}</main>
-            <RideauNavigation />
-            <CookieBanner />
+            <CalquesDifferes />
             <Annonceur />
           </SmoothScroll>
         </Providers>

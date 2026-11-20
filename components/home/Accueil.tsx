@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m } from "motion/react";
 import gsap from "gsap";
 import { useLenis } from "lenis/react";
 import { Cpu } from "lucide-react";
@@ -80,7 +80,7 @@ export function Accueil({ produits }: { produits: Produit[] }) {
       {/* Éléments flottants pendant l'intro */}
       <AnimatePresence>
         {intro && loaderFini && (
-          <motion.div
+          <m.div
             key="flottants"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1, transition: { delay: 0.6, duration: 0.8 } }}
@@ -95,7 +95,7 @@ export function Accueil({ produits }: { produits: Produit[] }) {
               <Cpu size={14} aria-hidden="true" /> Voir la technologie
             </Link>
             <Reseaux className="pointer-events-auto flex" />
-          </motion.div>
+          </m.div>
         )}
       </AnimatePresence>
     </>
