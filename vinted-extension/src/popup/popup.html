@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Vinted Dressing Assistant</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Vinted Assistant</h1>
+      <span id="mode" class="pill">…</span>
+    </header>
+
+    <!-- Bandeau d'arrêt d'urgence, visible seulement si un blocage a été détecté -->
+    <section id="halt" class="halt" hidden>
+      <strong>⛔ Tout est arrêté</strong>
+      <p id="halt-msg"></p>
+      <p class="small">Ouvrez Vinted, vérifiez votre compte (captcha, vérification…), attendez un moment, puis relancez.</p>
+    </section>
+
+    <section class="status">
+      <div><span class="label">État</span> <span id="run-state">…</span></div>
+      <div><span class="label">Actions (1 h)</span> <span id="usage-hour">…</span></div>
+      <div><span class="label">Actions (24 h)</span> <span id="usage-day">…</span></div>
+      <div><span class="label">Compte</span> <span id="account">non vérifié</span></div>
+    </section>
+
+    <section class="buttons">
+      <button id="btn-pause" class="danger">⏸ Pause générale</button>
+      <button id="btn-resume" hidden>▶ Reprendre</button>
+      <button id="btn-test">Tester la connexion</button>
+      <button id="btn-options">Options</button>
+    </section>
+
+    <nav class="tabs">
+      <button data-tab="items" class="active">Annonces</button>
+      <button data-tab="repubs">Republications</button>
+      <button data-tab="messages">Messages</button>
+      <button data-tab="logs">Logs</button>
+    </nav>
+
+    <section id="tab-items" class="tab">
+      <div class="tab-head">
+        <span id="items-info" class="small"></span>
+        <button id="btn-refresh" class="small-btn">Rafraîchir</button>
+      </div>
+      <ul id="items" class="list"></ul>
+    </section>
+
+    <section id="tab-repubs" class="tab" hidden>
+      <ul id="repubs" class="list"></ul>
+    </section>
+
+    <section id="tab-messages" class="tab" hidden>
+      <ul id="messages" class="list"></ul>
+    </section>
+
+    <section id="tab-logs" class="tab" hidden>
+      <div class="tab-head">
+        <span class="small">200 dernières lignes</span>
+        <button id="btn-clear-logs" class="small-btn">Effacer</button>
+      </div>
+      <ul id="logs" class="list logs"></ul>
+    </section>
+
+    <p id="toast" class="toast" hidden></p>
+    <script src="popup.js" type="module"></script>
+  </body>
+</html>

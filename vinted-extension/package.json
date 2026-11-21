@@ -1,0 +1,12 @@
+{
+  "name": "vinted-dressing-assistant",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Extension Chrome (MV3) de gestion de dressing Vinted. Aucune dépendance à installer.",
+  "scripts": {
+    "test": "node --test \"tests/unit/*.test.mjs\"",
+    "test:e2e": "node tests/e2e/extension.e2e.mjs",
+    "har": "node tools/analyze-har.mjs"
+  }
+}

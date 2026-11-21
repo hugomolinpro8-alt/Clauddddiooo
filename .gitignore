@@ -1,0 +1,8 @@
+# Captures réseau brutes : contiennent vos cookies de session. Ne JAMAIS les publier.
+*.har
+# Sauf le HAR d’exemple des tests (données fictives)
+!vinted-extension/tests/fixtures/sample.har
+# Rapports générés à partir de vos captures (anonymisés, mais personnels)
+*.rapport.md
+*.rapport.json
+node_modules/

@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Options — Vinted Assistant</title>
+    <link rel="stylesheet" href="options.css" />
+  </head>
+  <body>
+    <main>
+      <h1>Vinted Dressing Assistant — Options</h1>
+
+      <form id="form" novalidate>
+        <!-- ===================== GÉNÉRAL ===================== -->
+        <fieldset>
+          <legend>Général</legend>
+
+          <label class="check strong">
+            <input type="checkbox" id="simulation" />
+            Mode simulation (recommandé) — n'envoie rien à Vinted, affiche seulement ce qui serait fait
+          </label>
+          <p id="sim-warning" class="warning" hidden>
+            ⚠ Mode RÉEL : les actions seront réellement exécutées sur votre compte Vinted.
+          </p>
+
+          <label>Site Vinted
+            <select id="domain"></select>
+          </label>
+
+          <label>Identifiant numérique de votre compte
+            <input id="userId" inputmode="numeric" placeholder="ex. 12345678" />
+            <small>Dans l'adresse de votre profil : vinted.fr/member/<b>12345678</b>-pseudo. Rempli automatiquement par « Tester la connexion ».</small>
+          </label>
+        </fieldset>
+
+        <!-- ===================== QUOTAS ===================== -->
+        <fieldset>
+          <legend>Quotas de sécurité</legend>
+          <p class="hint">Ces limites s'appliquent à toutes les actions d'écriture (création, suppression, message, offre). Les bornes maximales sont imposées par l'extension.</p>
+          <div class="grid">
+            <label>Actions max par heure <input type="number" id="maxActionsPerHour" /></label>
+            <label>Actions max par 24 h <input type="number" id="maxActionsPerDay" /></label>
+            <label>Délai min entre 2 actions (s) <input type="number" id="minDelaySec" /></label>
+            <label>Délai min entre 2 lectures (s) <input type="number" id="minReadDelaySec" /></label>
+          </div>
+        </fieldset>
+
+        <!-- ===================== REPUBLICATION ===================== -->
+        <fieldset>
+          <legend>Republication <span class="tag">étape 2 — bientôt</span></legend>
+          <label class="check"><input type="checkbox" id="rp-enabled" /> Activer la republication automatique</label>
+          <div class="grid">
+            <label>Annonces par jour <input type="number" id="rp-perDay" /></label>
+            <label>Âge minimum (jours) <input type="number" id="rp-minAgeDays" /></label>
+            <label>Début de plage <input type="time" id="rp-windowStart" /></label>
+            <label>Fin de plage <input type="time" id="rp-windowEnd" /></label>
+            <label>Vérification après (s) <input type="number" id="rp-verifyDelaySec" /></label>
+          </div>
+          <div class="days" id="rp-days"></div>
+        </fieldset>
+
+        <!-- ===================== MESSAGES ===================== -->
+        <fieldset>
+          <legend>Messages aux favoris <span class="tag">étape 3 — bientôt</span></legend>
+          <label class="check"><input type="checkbox" id="fm-enabled" /> Envoyer un message quand quelqu'un met un article en favori</label>
+          <p class="hint">Un seul message par personne et par article, jamais de relance. Variables : <code>{prenom}</code> <code>{article}</code> <code>{prix}</code> <code>{prix_remise}</code> <code>{remise}</code></p>
+
+          <label>Modèle de message
+            <textarea id="fm-template" rows="3"></textarea>
+          </label>
+
+          <label class="check"><input type="checkbox" id="fm-offerEnabled" /> Proposer une offre réduite</label>
+          <div class="grid">
+            <label>Remise (%) <input type="number" id="fm-discountPercent" /></label>
+            <label>Début de plage <input type="time" id="fm-windowStart" /></label>
+            <label>Fin de plage <input type="time" id="fm-windowEnd" /></label>
+          </div>
+          <label>Modèle du message avec offre
+            <textarea id="fm-offerTemplate" rows="3"></textarea>
+          </label>
+
+          <div class="preview">
+            <strong>Aperçu</strong> (Camille, « Robe en lin bleue », 25 €)
+            <p id="preview-msg"></p>
+            <p id="preview-offer"></p>
+            <p id="preview-warn" class="warning" hidden></p>
+          </div>
+        </fieldset>
+
+        <!-- ===================== ENDPOINTS ===================== -->
+        <fieldset>
+          <legend>Endpoints avancés</legend>
+          <p class="hint">À remplir seulement après l'analyse de votre fichier HAR (voir docs/CAPTURE_HAR.md). Laisser <code>{}</code> sinon.</p>
+          <table id="endpoints-table"><thead><tr><th>Nom</th><th>Méthode</th><th>Chemin</th><th>Statut</th></tr></thead><tbody></tbody></table>
+          <label>Surcharges (JSON)
+            <textarea id="endpointsOverride" rows="5" spellcheck="false" class="mono"></textarea>
+          </label>
+          <p id="json-error" class="warning" hidden></p>
+        </fieldset>
+
+        <div class="actions">
+          <button type="submit" class="primary">Enregistrer</button>
+          <button type="button" id="reset">Valeurs par défaut</button>
+          <span id="saved" class="ok" hidden>✓ Enregistré</span>
+        </div>
+      </form>
+    </main>
+    <script src="options.js" type="module"></script>
+  </body>
+</html>
