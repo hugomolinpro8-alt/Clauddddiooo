@@ -1,0 +1,6 @@
+# Surcharge pour environnements où api.binance.com est géobloqué (serveurs cloud US).
+# Miroirs officiels Binance « market data only » — spot uniquement (pas de miroir perp).
+markets: [spot]
+binance:
+  spot_ws: wss://data-stream.binance.vision
+  spot_rest: https://data-api.binance.vision

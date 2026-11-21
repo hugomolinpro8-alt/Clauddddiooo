@@ -1,0 +1,46 @@
+# Configuration Sentinel — AUCUN secret ici (ils vont dans .env).
+watchlist: [BTCUSDT, ETHUSDT, SOLUSDT]
+markets: [spot, perp]
+timeframes: [15m, 1h, 4h, 1d]
+
+# close    = signal uniquement à la clôture de bougie (défaut, plus fiable)
+# intrabar = signal pendant la bougie (plus rapide, davantage de faux signaux)
+signal_mode: close
+
+binance:
+  spot_ws: wss://stream.binance.com:9443
+  spot_rest: https://api.binance.com
+  perp_ws: wss://fstream.binance.com
+  perp_rest: https://fapi.binance.com
+
+feed:
+  stale_after_s: 60          # silence max avant l'alerte « FLUX COUPÉ »
+  reconnect_min_backoff_s: 0.5
+  reconnect_max_backoff_s: 30
+  ping_interval_s: 20
+
+history:
+  warmup_bars: 500           # bougies chargées au démarrage pour chauffer les indicateurs
+  cache_dir: data/cache
+
+indicators:
+  ema_periods: [20, 50, 200]
+  sma_periods: [20]
+  rsi_period: 14
+  macd: [12, 26, 9]
+  atr_period: 14
+  bb_period: 20
+  bb_k: 2.0
+  relvol_period: 20
+  hl_lookback: 20
+  swing_k: 3
+  sr_tolerance_pct: 0.4
+  sr_max_levels: 12
+
+latency:
+  target_ms: 500
+
+risk:
+  capital_eur: 3000
+  risk_per_trade_pct: 0.5
+  max_drawdown_pct: 10
