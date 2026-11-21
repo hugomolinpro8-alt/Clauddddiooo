@@ -33,6 +33,16 @@ class CostModel:
             return CostModel(taker_fee=0.001, maker_fee=0.001, slippage=slippage)
         return CostModel(taker_fee=0.0005, maker_fee=0.0002, slippage=slippage, funding=True)
 
+    def scaled(self, k: float) -> CostModel:
+        """Coûts multipliés par k (test de stress : et si l'exécution réelle est pire ?)."""
+        return CostModel(
+            self.taker_fee * k,
+            self.maker_fee * k,
+            self.slippage * k,
+            self.stop_slippage_mult,
+            self.funding,
+        )
+
     @staticmethod
     def zero() -> CostModel:
         return CostModel(0.0, 0.0, 0.0)

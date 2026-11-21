@@ -1,18 +1,26 @@
-# Phase 2 — Backtest « Pullback dans la tendance » (4h, filtre journalier)
+# Essai n°1 — Pullback dans la tendance (4h, filtre journalier)
 
-_Généré le 2026-11-21 16:35 UTC par `uv run python scripts/backtest_pullback.py`. Aucun chiffre n'est saisi à la main._
+_Généré le 2026-11-21 23:10 UTC par `uv run python scripts/backtest_pullback.py`. Aucun chiffre n'est saisi à la main._
 
-## Hypothèses
+## Règles (figées avant toute exécution)
 
-- Données : archives officielles Binance (data.binance.vision), bougies 4h et 1j.
-- Signal à la clôture 4h, **entrée à l'ouverture suivante**. Stop/objectif touchés dans la même bougie : **stop supposé en premier**. Gap au-delà du stop : sortie à l'ouverture.
-- Coûts spot : taker 0,10 %, maker 0,10 %, slippage 0,05 % (×2 sur les stops). Perp : taker 0,05 %, maker 0,02 %, même slippage, **funding réel** historique.
-- Portefeuille : 0.5% du capital risqué par trade, risque ouvert total ≤ 1,5 % (BTC/ETH/SOL sont corrélés), notionnel ≤ 1× le capital (aucun levier). Équité valorisée chaque jour au prix de marché.
-- Les statistiques de trades couvrent tout l'historique de chaque actif (BTC/ETH dès 2019) ; le portefeuille commun démarre quand les 3 actifs ont des données (SOL : août 2020 en spot, sept. 2020 en perp).
-- In-sample : début des données → 2022-12-31. **Hors échantillon : 2023-01-01 → fin.** Les règles ont été écrites avant tout test ; elles n'ont pas été ajustées.
+- Régime journalier : close_1j > EMA50_1j > EMA200_1j (miroir pour le short, perp seul).
+- Tendance 4h : EMA20 > EMA50, EMA20 montante, close > EMA50.
+- Déclencheur : bougie précédente clôturée sous l'EMA20, bougie courante clôturée au-dessus et haussière.
+- Stop : plus bas des 5 dernières bougies − 0,25 ATR ; risque entre 0,5 et 3 ATR.
+- Gestion : 50 % à +2R, stop au point mort, reste en suiveur 3 ATR ; sortie après 30 bougies si +2R non atteint.
 - Paramètres par défaut : `PullbackParams(ema_fast=20, ema_slow=50, d_fast=50, d_slow=200, lookback=5, stop_buffer_atr=0.25, min_risk_atr=0.5, max_risk_atr=3.0, tp1_r=2.0, tp1_frac=0.5, trail_atr=3.0, time_stop_bars=30, allow_short=False)`
 
-**Critères d'activation (fixés avant exécution)** : `min_oos_trades=30`, `min_oos_expectancy_r=0.05`, `min_oos_profit_factor=1.15`, `wf_expectancy_positive=True`, `max_oos_drawdown=-0.1`
+## Hypothèses d'exécution
+
+- Données : archives officielles Binance (data.binance.vision).
+- Signal à la clôture, **entrée à l'ouverture suivante**. Stop/objectif touchés dans la même bougie : **stop supposé en premier**. Gap au-delà du stop : sortie à l'ouverture.
+- Coûts spot : taker 0,10 %, maker 0,10 %, slippage 0,05 % (×2 sur les stops). Perp : taker 0,05 %, maker 0,02 %, même slippage, **funding réel** historique.
+- Portefeuille : 0.5% du capital risqué par trade, risque ouvert total ≤ 1,5 % (BTC/ETH/SOL sont corrélés), notionnel ≤ 1× le capital (aucun levier). Équité valorisée chaque jour au prix de marché.
+- Les statistiques de trades couvrent tout l'historique de chaque actif ; le portefeuille commun démarre quand les 3 actifs ont des données (SOL : août 2020 en spot, sept. 2020 en perp).
+- In-sample : début → 2022-12-31. **Hors échantillon (OOS) : 2023-01-01 → fin.**
+
+**Critères d'activation (fixés avant exécution)** : `min_oos_trades=30`, `min_oos_expectancy_r=0.05`, `min_oos_profit_factor=1.15`, `wf_expectancy_positive=1`, `max_oos_drawdown=-0.1`
 
 
 ## SPOT (long uniquement)
@@ -44,42 +52,49 @@ _Généré le 2026-11-21 16:35 UTC par `uv run python scripts/backtest_pullback.
 | B&H BTC Total | +29.9% | 56.8% | 0.74 | 1.11 | -76.6% | 0.39 | 100% |
 | B&H panier égal Total | +44.6% | 83.8% | 0.86 | 1.27 | -92.1% | 0.48 | 100% |
 
-_Comparer le CAGR brut est trompeur : la stratégie ne risque que 0,5 % par trade et n'est investie qu'une partie du temps. La comparaison pertinente est le couple Sharpe / max drawdown (rendement par unité de risque)._
+_Comparer le CAGR brut est trompeur : la stratégie ne risque que 0.5% par trade et n'est investie qu'une partie du temps. La comparaison pertinente est le couple Sharpe / max drawdown (rendement par unité de risque)._
 
 ### Walk-forward (entraînement 24 mois → test 6 mois, glissant)
 
-Grille : {'tp1_r': [1.5, 2.0, 3.0], 'trail_atr': [2.0, 3.0, 4.0], 'time_stop_bars': [20, 30, 60]} → 27 combinaisons. Critère de choix : espérance R maximale sur la fenêtre d'entraînement (≥ 15 trades).
+Grille : `{'tp1_r': [1.5, 2.0, 3.0], 'trail_atr': [2.0, 3.0, 4.0], 'time_stop_bars': [20, 30, 60]}` → 27 combinaisons. Critère de choix : espérance R maximale sur la fenêtre d'entraînement (≥ 15 trades).
 
 | Test | Combinaison choisie | Esp. entraînement | Trades test | Esp. test |
 |---|---|---|---|---|
-| 2022-08-01 → 2023-01-28 | tp1=3.0, trail=4.0, temps=60 | +0.736 | 0 | +0.000 |
-| 2023-01-28 → 2023-07-27 | tp1=3.0, trail=4.0, temps=60 | +0.519 | 21 | -0.428 |
-| 2023-07-27 → 2024-01-23 | tp1=3.0, trail=3.0, temps=60 | +0.131 | 29 | +0.184 |
-| 2024-01-23 → 2024-07-21 | tp1=2.0, trail=4.0, temps=60 | -0.074 | 28 | +0.187 |
-| 2024-07-21 → 2025-01-17 | tp1=1.5, trail=4.0, temps=30 | -0.002 | 22 | +0.526 |
-| 2025-01-17 → 2025-07-16 | tp1=1.5, trail=4.0, temps=30 | +0.116 | 12 | +0.906 |
-| 2025-07-16 → 2026-01-12 | tp1=3.0, trail=3.0, temps=60 | +0.288 | 22 | -0.703 |
-| 2026-01-12 → 2026-07-11 | tp1=2.0, trail=4.0, temps=30 | +0.199 | 0 | +0.000 |
-| 2026-07-11 → 2026-11-20 | tp1=2.0, trail=4.0, temps=30 | +0.169 | 12 | -0.617 |
+| 2022-08-01 → 2023-01-28 | tp1_r=3.0, trail_atr=4.0, time_stop_bars=60 | +0.736 | 0 | +0.000 |
+| 2023-01-28 → 2023-07-27 | tp1_r=3.0, trail_atr=4.0, time_stop_bars=60 | +0.519 | 21 | -0.428 |
+| 2023-07-27 → 2024-01-23 | tp1_r=3.0, trail_atr=3.0, time_stop_bars=60 | +0.131 | 29 | +0.184 |
+| 2024-01-23 → 2024-07-21 | tp1_r=2.0, trail_atr=4.0, time_stop_bars=60 | -0.074 | 28 | +0.187 |
+| 2024-07-21 → 2025-01-17 | tp1_r=1.5, trail_atr=4.0, time_stop_bars=30 | -0.002 | 22 | +0.526 |
+| 2025-01-17 → 2025-07-16 | tp1_r=1.5, trail_atr=4.0, time_stop_bars=30 | +0.116 | 12 | +0.906 |
+| 2025-07-16 → 2026-01-12 | tp1_r=3.0, trail_atr=3.0, time_stop_bars=60 | +0.288 | 22 | -0.703 |
+| 2026-01-12 → 2026-07-11 | tp1_r=2.0, trail_atr=4.0, time_stop_bars=30 | +0.199 | 0 | +0.000 |
+| 2026-07-11 → 2026-11-20 | tp1_r=2.0, trail_atr=4.0, time_stop_bars=30 | +0.169 | 12 | -0.617 |
 
 | Version | Trades | Win rate | Espérance nette R [IC 95 %] | Espérance brute R | Profit factor | Total R | Durée moy. (bougies 4h) |
 |---|---|---|---|---|---|---|---|
 | Walk-forward (paramètres choisis sans voir l'avenir) | 146 | 35% | +0.008 [-0.27 ; +0.30] | +0.120 | 1.01 | +1.1 | 27 |
 | Paramètres par défaut, mêmes périodes | 185 | 38% | -0.003 [-0.23 ; +0.24] | +0.109 | 1.00 | -0.5 | 18 |
 
-**Sensibilité (OOS, 27 combinaisons)** : espérance min -0.126 R, médiane -0.022 R, max +0.024 R ; 15% des combinaisons positives. Combinaison par défaut : -0.003 R.
+**Sensibilité (OOS, 27 combinaisons)** : espérance min -0.126 R, médiane -0.022 R, max +0.024 R ; **15% des combinaisons positives**.
 _Lecture : si seule une petite « île » de paramètres est positive, c'est du surapprentissage ; un avantage réel résiste à des variations raisonnables._
 
 ### Comportement pendant les krachs
 
 | Épisode | Trades ouverts | R net de ces trades | Variation équité stratégie | BTC sur la période |
 |---|---|---|---|---|
-| Krach COVID (2020-03-08) | 0 | +0.00 | n/d (avant le début du portefeuille commun) | -30.7% |
+| Krach COVID (2020-03-08) | 0 | +0.00 | n/d (avant le portefeuille commun) | -30.7% |
 | Krach mai 2021 (2021-05-10) | 6 | -6.28 | -3.59% | -40.5% |
 | Effondrement LUNA (2022-05-05) | 0 | +0.00 | +0.00% | -24.2% |
 | Faillite FTX (2022-11-06) | 0 | +0.00 | +0.00% | -19.9% |
 | Krach août 2024 (2024-08-01) | 0 | +0.00 | +0.00% | -13.3% |
 | Liquidations oct. 2025 (2025-10-09) | 3 | -3.28 | -1.66% | -6.8% |
+
+### Robustesse
+
+- **Concentration (OOS)** : espérance sans les 3 meilleurs trades -0.103 R, sans les 5 meilleurs -0.155 R ; trade médian -1.043 R.
+- **Coûts × 2** (frais et slippage) : espérance OOS -0.134 R, profit factor 0.81.
+- **Coûts × 3** (frais et slippage) : espérance OOS -0.251 R, profit factor 0.68.
+- **Par année d'entrée** : 2019 : -5.2 R (6) · 2020 : -0.5 R (50) · 2021 : +13.9 R (82) · 2023 : -10.4 R (58) · 2024 : +14.0 R (71) · 2025 : +3.2 R (43) · 2026 : -7.3 R (13)
 
 ### Verdict SPOT (long uniquement)
 
@@ -108,7 +123,7 @@ _Lecture : si seule une petite « île » de paramètres est positive, c'est du 
 | Total OOS | LONG | 183 | 38% | +0.015 [-0.20 ; +0.25] | +0.109 | 1.03 | +2.8 | 18 |
 | Total OOS | SHORT | 131 | 34% | -0.098 [-0.38 ; +0.21] | -0.032 | 0.86 | -12.9 | 16 |
 
-Funding cumulé payé/reçu sur tous les trades : **-11.82 R**.
+Funding cumulé sur tous les trades : **-11.82 R**.
 
 ### Portefeuille vs buy-and-hold
 
@@ -124,42 +139,49 @@ Funding cumulé payé/reçu sur tous les trades : **-11.82 R**.
 | B&H BTC Total | +31.8% | 57.0% | 0.77 | 1.15 | -76.7% | 0.42 | 100% |
 | B&H panier égal Total | +45.8% | 83.9% | 0.87 | 1.28 | -92.1% | 0.50 | 100% |
 
-_Comparer le CAGR brut est trompeur : la stratégie ne risque que 0,5 % par trade et n'est investie qu'une partie du temps. La comparaison pertinente est le couple Sharpe / max drawdown (rendement par unité de risque)._
+_Comparer le CAGR brut est trompeur : la stratégie ne risque que 0.5% par trade et n'est investie qu'une partie du temps. La comparaison pertinente est le couple Sharpe / max drawdown (rendement par unité de risque)._
 
 ### Walk-forward (entraînement 24 mois → test 6 mois, glissant)
 
-Grille : {'tp1_r': [1.5, 2.0, 3.0], 'trail_atr': [2.0, 3.0, 4.0], 'time_stop_bars': [20, 30, 60]} → 27 combinaisons. Critère de choix : espérance R maximale sur la fenêtre d'entraînement (≥ 15 trades).
+Grille : `{'tp1_r': [1.5, 2.0, 3.0], 'trail_atr': [2.0, 3.0, 4.0], 'time_stop_bars': [20, 30, 60]}` → 27 combinaisons. Critère de choix : espérance R maximale sur la fenêtre d'entraînement (≥ 15 trades).
 
 | Test | Combinaison choisie | Esp. entraînement | Trades test | Esp. test |
 |---|---|---|---|---|
-| 2022-09-04 → 2023-03-03 | tp1=3.0, trail=4.0, temps=60 | +0.312 | 37 | -0.339 |
-| 2023-03-03 → 2023-08-30 | tp1=3.0, trail=4.0, temps=60 | -0.020 | 28 | -0.230 |
-| 2023-08-30 → 2024-02-26 | tp1=3.0, trail=4.0, temps=60 | -0.179 | 43 | +0.173 |
-| 2024-02-26 → 2024-08-24 | tp1=1.5, trail=4.0, temps=60 | -0.148 | 26 | -0.356 |
-| 2024-08-24 → 2025-02-20 | tp1=1.5, trail=4.0, temps=30 | -0.092 | 31 | -0.011 |
-| 2025-02-20 → 2025-08-19 | tp1=1.5, trail=4.0, temps=30 | -0.003 | 42 | -0.037 |
-| 2025-08-19 → 2026-02-15 | tp1=1.5, trail=4.0, temps=30 | +0.072 | 42 | +0.016 |
-| 2026-02-15 → 2026-08-14 | tp1=2.0, trail=3.0, temps=30 | -0.032 | 46 | +0.054 |
-| 2026-08-14 → 2026-11-20 | tp1=3.0, trail=3.0, temps=30 | +0.083 | 15 | -0.439 |
+| 2022-09-04 → 2023-03-03 | tp1_r=3.0, trail_atr=4.0, time_stop_bars=60 | +0.312 | 37 | -0.339 |
+| 2023-03-03 → 2023-08-30 | tp1_r=3.0, trail_atr=4.0, time_stop_bars=60 | -0.020 | 28 | -0.230 |
+| 2023-08-30 → 2024-02-26 | tp1_r=3.0, trail_atr=4.0, time_stop_bars=60 | -0.179 | 43 | +0.173 |
+| 2024-02-26 → 2024-08-24 | tp1_r=1.5, trail_atr=4.0, time_stop_bars=60 | -0.148 | 26 | -0.356 |
+| 2024-08-24 → 2025-02-20 | tp1_r=1.5, trail_atr=4.0, time_stop_bars=30 | -0.092 | 31 | -0.011 |
+| 2025-02-20 → 2025-08-19 | tp1_r=1.5, trail_atr=4.0, time_stop_bars=30 | -0.003 | 42 | -0.037 |
+| 2025-08-19 → 2026-02-15 | tp1_r=1.5, trail_atr=4.0, time_stop_bars=30 | +0.072 | 42 | +0.016 |
+| 2026-02-15 → 2026-08-14 | tp1_r=2.0, trail_atr=3.0, time_stop_bars=30 | -0.032 | 46 | +0.054 |
+| 2026-08-14 → 2026-11-20 | tp1_r=3.0, trail_atr=3.0, time_stop_bars=30 | +0.083 | 15 | -0.439 |
 
 | Version | Trades | Win rate | Espérance nette R [IC 95 %] | Espérance brute R | Profit factor | Total R | Durée moy. (bougies 4h) |
 |---|---|---|---|---|---|---|---|
 | Walk-forward (paramètres choisis sans voir l'avenir) | 310 | 35% | -0.084 [-0.26 ; +0.10] | -0.000 | 0.87 | -26.2 | 22 |
 | Paramètres par défaut, mêmes périodes | 349 | 35% | -0.064 [-0.23 ; +0.11] | +0.019 | 0.90 | -22.2 | 17 |
 
-**Sensibilité (OOS, 27 combinaisons)** : espérance min -0.158 R, médiane -0.093 R, max -0.019 R ; 0% des combinaisons positives. Combinaison par défaut : -0.032 R.
+**Sensibilité (OOS, 27 combinaisons)** : espérance min -0.158 R, médiane -0.093 R, max -0.019 R ; **0% des combinaisons positives**.
 _Lecture : si seule une petite « île » de paramètres est positive, c'est du surapprentissage ; un avantage réel résiste à des variations raisonnables._
 
 ### Comportement pendant les krachs
 
 | Épisode | Trades ouverts | R net de ces trades | Variation équité stratégie | BTC sur la période |
 |---|---|---|---|---|
-| Krach COVID (2020-03-08) | 0 | +0.00 | n/d (avant le début du portefeuille commun) | -30.8% |
+| Krach COVID (2020-03-08) | 0 | +0.00 | n/d (avant le portefeuille commun) | -30.8% |
 | Krach mai 2021 (2021-05-10) | 6 | -6.50 | -3.57% | -40.6% |
 | Effondrement LUNA (2022-05-05) | 1 | -1.03 | -1.56% | -24.2% |
 | Faillite FTX (2022-11-06) | 0 | +0.00 | +0.00% | -19.9% |
 | Krach août 2024 (2024-08-01) | 0 | +0.00 | +0.00% | -13.3% |
 | Liquidations oct. 2025 (2025-10-09) | 3 | -3.20 | -1.63% | -6.8% |
+
+### Robustesse
+
+- **Concentration (OOS)** : espérance sans les 3 meilleurs trades -0.109 R, sans les 5 meilleurs -0.152 R ; trade médian -1.042 R.
+- **Coûts × 2** (frais et slippage) : espérance OOS -0.093 R, profit factor 0.87.
+- **Coûts × 3** (frais et slippage) : espérance OOS -0.179 R, profit factor 0.76.
+- **Par année d'entrée** : 2020 : +1.2 R (30) · 2021 : +3.3 R (89) · 2022 : -27.3 R (102) · 2023 : -14.5 R (81) · 2024 : +4.5 R (82) · 2025 : -11.6 R (81) · 2026 : +11.5 R (70)
 
 ### Verdict PERP (long + short)
 
@@ -183,4 +205,4 @@ _Lecture : si seule une petite « île » de paramètres est positive, c'est du 
 ![Équité](phase2_pullback_equity.png)
 
 
-_Temps de calcul : 85 s._
+_Temps de calcul : 80 s._

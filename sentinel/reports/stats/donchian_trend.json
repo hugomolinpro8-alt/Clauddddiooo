@@ -1,0 +1,73 @@
+{
+  "strategy": "donchian_trend",
+  "trial": 2,
+  "generated": "2026-11-21T23:10:15.473887+00:00",
+  "params": "DonchianParams(entry_n=55, exit_n=20, stop_atr=2.0, allow_short=False)",
+  "oos_start": "2023-01-01",
+  "verdicts": {
+    "SPOT (long uniquement)": true,
+    "PERP (long + short)": true
+  },
+  "per_asset": {
+    "spot:BTCUSDT": {
+      "n": 24,
+      "win_rate": 0.5,
+      "expectancy_r": 3.4912834028916513,
+      "oos_n": 14,
+      "oos_win_rate": 0.42857142857142855,
+      "oos_expectancy_r": 1.050548859412807,
+      "avg_win_r": 7.754595865560815,
+      "avg_loss_r": -0.7720290597775135
+    },
+    "spot:ETHUSDT": {
+      "n": 24,
+      "win_rate": 0.5833333333333334,
+      "expectancy_r": 1.7624118472310044,
+      "oos_n": 12,
+      "oos_win_rate": 0.6666666666666666,
+      "oos_expectancy_r": 1.00624332205862,
+      "avg_win_r": 3.6659353449374072,
+      "avg_loss_r": -0.9025210495579596
+    },
+    "spot:SOLUSDT": {
+      "n": 16,
+      "win_rate": 0.4375,
+      "expectancy_r": 5.519993056523054,
+      "oos_n": 13,
+      "oos_win_rate": 0.38461538461538464,
+      "oos_expectancy_r": 2.0092663516644182,
+      "avg_win_r": 13.776110980748689,
+      "avg_loss_r": -0.9014319956524403
+    },
+    "perp:BTCUSDT": {
+      "n": 39,
+      "win_rate": 0.4358974358974359,
+      "expectancy_r": 1.216302184078411,
+      "oos_n": 24,
+      "oos_win_rate": 0.4583333333333333,
+      "oos_expectancy_r": 0.5008939788821614,
+      "avg_win_r": 3.858659296328691,
+      "avg_loss_r": -0.8255192208422598
+    },
+    "perp:ETHUSDT": {
+      "n": 34,
+      "win_rate": 0.5588235294117647,
+      "expectancy_r": 1.0044976599615378,
+      "oos_n": 21,
+      "oos_win_rate": 0.6666666666666666,
+      "oos_expectancy_r": 0.6957344870967549,
+      "avg_win_r": 2.4254789138327837,
+      "avg_loss_r": -0.7954119282753743
+    },
+    "perp:SOLUSDT": {
+      "n": 32,
+      "win_rate": 0.375,
+      "expectancy_r": 2.2582636264167566,
+      "oos_n": 24,
+      "oos_win_rate": 0.2916666666666667,
+      "oos_expectancy_r": 0.7078409145511951,
+      "avg_win_r": 7.406565382678241,
+      "avg_loss_r": -0.8307174273401348
+    }
+  }
+}

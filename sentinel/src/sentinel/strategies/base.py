@@ -36,6 +36,9 @@ class Setup:
     time_stop_bars: int  # sortie si TP1 non atteint après N bougies
     reason: str
     time_ms: int
+    # Sortie par canal (Donchian) : stop suiveur = plus bas (long) / plus haut (short) des
+    # N dernières bougies, actif dès l'entrée. 0 = désactivé.
+    exit_channel: int = 0
 
 
 class Strategy(Protocol):

@@ -18,7 +18,8 @@ comparables entre actifs et indépendants du capital.
 from __future__ import annotations
 
 import bisect
-from collections.abc import Callable, Sequence
+from collections import deque
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass, field
 
 from sentinel.backtest.costs import CostModel
@@ -80,7 +81,7 @@ class Backtester:
         self,
         symbol: str,
         market: Market,
-        bars: dict[Timeframe, Sequence[Bar]],
+        bars: Mapping[Timeframe, Sequence[Bar]],
         funding: Sequence[tuple[int, float]] = (),
         start_ms: int | None = None,
         end_ms: int | None = None,
@@ -107,6 +108,7 @@ class Backtester:
         pos: _Open | None = None
         prev_close_ms = 0
         last_bar: Bar | None = None
+        recent: deque[tuple[float, float]] = deque(maxlen=500)  # (high, low) bougies principales
 
         for _, _, tf, bar in events:
             if end_ms is not None and bar.open_time_ms >= end_ms:
@@ -125,7 +127,8 @@ class Backtester:
                     trades.append(pos.t)
                     pos = None
             snap = engines[main_tf].update(bar)
-            if pos is not None and snap is not None and self._after_close(pos, bar, snap):
+            recent.append((bar.high, bar.low))
+            if pos is not None and snap is not None and self._after_close(pos, bar, snap, recent):
                 trades.append(pos.t)
                 pos = None
             ctx: dict[Timeframe, IndicatorSnapshot | None] = {
@@ -198,11 +201,12 @@ class Backtester:
         touched = bar.low <= pos.stop if side is Side.LONG else bar.high >= pos.stop
         if gap or touched:
             px = bar.open if gap else pos.stop
-            reason = (
-                "stop_point_mort"
-                if tr.tp1_hit and pos.stop == tr.entry
-                else ("stop_suiveur" if tr.tp1_hit else "stop")
-            )
+            if tr.tp1_hit and pos.stop == tr.entry:
+                reason = "stop_point_mort"
+            elif tr.tp1_hit or side * (pos.stop - tr.stop0) > 0:
+                reason = "stop_suiveur"  # stop remonté (suiveur ATR ou canal)
+            else:
+                reason = "stop"
             self._exit(pos, px, bar.close_time_ms, pos.size, reason, c.taker_fee, c.stop_slippage)
             self._finalize(pos)
             return True
@@ -217,9 +221,18 @@ class Backtester:
                 return True
         return False
 
-    def _after_close(self, pos: _Open, bar: Bar, snap: IndicatorSnapshot) -> bool:
-        """À la clôture : stop suiveur, sortie temporelle, valorisation latente."""
+    def _after_close(
+        self, pos: _Open, bar: Bar, snap: IndicatorSnapshot, recent: deque[tuple[float, float]]
+    ) -> bool:
+        """À la clôture : stops suiveurs, sortie temporelle, valorisation latente."""
         tr, side, c = pos.t, pos.t.side, self.costs
+        n = pos.setup.exit_channel
+        if n > 0 and len(recent) >= n:
+            window = list(recent)[-n:]
+            if side is Side.LONG:
+                pos.stop = max(pos.stop, min(lo for _, lo in window))
+            else:
+                pos.stop = min(pos.stop, max(hi for hi, _ in window))
         if side is Side.LONG:
             pos.extreme = max(pos.extreme, bar.high)
         else:

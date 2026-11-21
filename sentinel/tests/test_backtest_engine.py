@@ -212,3 +212,50 @@ def test_trade_stats() -> None:
     assert s.expectancy_r == pytest.approx(0.75)
     assert s.profit_factor == pytest.approx(2.5)
     assert np.isfinite(s.exp_ci_low)
+
+
+# --- Sortie par canal + stratégie Donchian ------------------------------------------------
+def test_channel_exit_trails_up_and_exits() -> None:
+    """Long 100, stop initial 90, canal 2 bougies : le stop remonte au plus bas des 2
+    dernières bougies, puis la position sort quand ce plus bas est cassé."""
+    from dataclasses import replace
+
+    class Chan(Scripted):
+        def on_bar(self, snap: IndicatorSnapshot, ctx: object, bar: Bar) -> Setup | None:
+            s = super().on_bar(snap, ctx, bar)
+            return None if s is None else replace(s, tp1_r=float("inf"), exit_channel=2)
+
+    ohlc = [
+        FLAT,
+        FLAT,
+        (100, 104, 99, 103),
+        (103, 108, 102, 107),
+        (107, 109, 106, 108),
+        (108, 108, 101, 102),
+    ]
+    (t,) = run(Chan(1, Side.LONG, stop=90.0), ohlc)
+    # après la bougie 4 : canal = min(102, 106) = 102 → bougie 5 touche 101 → sortie à 102
+    assert t.exit_reason == "stop_suiveur"
+    assert t.r_net == pytest.approx((102 - 100) / 10)
+
+
+def test_donchian_breakout_excludes_current_bar() -> None:
+    from sentinel.core.config import IndicatorConfig
+    from sentinel.indicators.engine import IndicatorEngine
+    from sentinel.strategies.donchian import DonchianParams, DonchianTrend
+
+    key = StreamKey(Market.SPOT, "X", Timeframe.D1)
+    strat = DonchianTrend(DonchianParams(entry_n=3, stop_atr=2.0))
+    eng = IndicatorEngine(key, IndicatorConfig())
+    day = 86_400_000
+    setups = []
+    seq = [(10, 11, 9, 10)] * 20 + [(10, 11, 9, 10.9), (10.9, 12, 10.5, 11.8)]
+    for i, (o, h, lo, c) in enumerate(seq):
+        b = Bar(key, i * day, (i + 1) * day - 1, o, h, lo, c, 1.0, True)
+        snap = eng.update(b)
+        assert snap is not None
+        setups.append(strat.on_bar(snap, {}, b))
+    assert setups[-2] is None  # 10,9 < plus haut précédent 11 : pas de cassure
+    s = setups[-1]
+    assert s is not None and s.side is Side.LONG and s.exit_channel == 20
+    assert s.stop == pytest.approx(11.8 - 2.0 * eng.last.atr)  # type: ignore[union-attr]

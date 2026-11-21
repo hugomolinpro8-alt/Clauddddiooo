@@ -44,3 +44,15 @@ risk:
   capital_eur: 3000
   risk_per_trade_pct: 0.5
   max_drawdown_pct: 10
+
+# Stratégies activées en live. Une stratégie n'est listée ici QUE si elle a passé le protocole
+# de backtest (voir reports/RESEARCH_LOG.md). Les statistiques affichées dans les alertes
+# viennent de reports/stats/<nom>.json.
+strategies:
+  donchian_trend:
+    enabled: true
+    markets: [spot]          # validée en spot long ; shorts perp non significatifs
+    allow_short: false
+    params: {entry_n: 55, exit_n: 20, stop_atr: 2.0}
+  trend_pullback:
+    enabled: false           # essai n°1 rejeté : espérance OOS ≤ 0 après frais

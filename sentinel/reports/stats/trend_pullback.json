@@ -1,0 +1,73 @@
+{
+  "strategy": "trend_pullback",
+  "trial": 1,
+  "generated": "2026-11-21T23:11:36.192085+00:00",
+  "params": "PullbackParams(ema_fast=20, ema_slow=50, d_fast=50, d_slow=200, lookback=5, stop_buffer_atr=0.25, min_risk_atr=0.5, max_risk_atr=3.0, tp1_r=2.0, tp1_frac=0.5, trail_atr=3.0, time_stop_bars=30, allow_short=False)",
+  "oos_start": "2023-01-01",
+  "verdicts": {
+    "SPOT (long uniquement)": false,
+    "PERP (long + short)": false
+  },
+  "per_asset": {
+    "spot:BTCUSDT": {
+      "n": 120,
+      "win_rate": 0.4,
+      "expectancy_r": 0.08383508405300824,
+      "oos_n": 71,
+      "oos_win_rate": 0.38028169014084506,
+      "oos_expectancy_r": 0.1495309502143325,
+      "avg_win_r": 1.7282138295887357,
+      "avg_loss_r": -1.01241741297081
+    },
+    "spot:ETHUSDT": {
+      "n": 118,
+      "win_rate": 0.3813559322033898,
+      "expectancy_r": -0.03525073616774705,
+      "oos_n": 59,
+      "oos_win_rate": 0.3220338983050847,
+      "oos_expectancy_r": -0.23339975122242634,
+      "avg_win_r": 1.5728237683732098,
+      "avg_loss_r": -1.0265295403368302
+    },
+    "spot:SOLUSDT": {
+      "n": 85,
+      "win_rate": 0.4117647058823529,
+      "expectancy_r": 0.022065723478391232,
+      "oos_n": 55,
+      "oos_win_rate": 0.43636363636363634,
+      "oos_expectancy_r": 0.04888445411841472,
+      "avg_win_r": 1.4409408884064554,
+      "avg_loss_r": -0.9711468919712537
+    },
+    "perp:BTCUSDT": {
+      "n": 178,
+      "win_rate": 0.3539325842696629,
+      "expectancy_r": 0.005351000195275881,
+      "oos_n": 96,
+      "oos_win_rate": 0.3645833333333333,
+      "oos_expectancy_r": 0.14567295734173005,
+      "avg_win_r": 1.7901110084593819,
+      "avg_loss_r": -0.9723870912885387
+    },
+    "perp:ETHUSDT": {
+      "n": 182,
+      "win_rate": 0.3241758241758242,
+      "expectancy_r": -0.17543009422397984,
+      "oos_n": 108,
+      "oos_win_rate": 0.3055555555555556,
+      "oos_expectancy_r": -0.25446025881098555,
+      "avg_win_r": 1.5770799644355447,
+      "avg_loss_r": -1.0160650004102558
+    },
+    "perp:SOLUSDT": {
+      "n": 175,
+      "win_rate": 0.4,
+      "expectancy_r": -0.011217409668799139,
+      "oos_n": 110,
+      "oos_win_rate": 0.41818181818181815,
+      "oos_expectancy_r": 0.03087251801538224,
+      "avg_win_r": 1.4786705755169092,
+      "avg_loss_r": -1.0044760664592711
+    }
+  }
+}
