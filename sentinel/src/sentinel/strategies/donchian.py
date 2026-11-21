@@ -39,8 +39,18 @@ class DonchianParams:
 
 class DonchianTrend:
     name = "donchian_trend"
+    label = "Donchian 55/20 (journalier)"
+    horizon = "Moyen terme (semaines)"
     timeframe = Timeframe.D1
     context: tuple[Timeframe, ...] = ()
+    # Rappels de profil, repris dans les contre-arguments de CHAQUE rapport.
+    profile_warnings: tuple[str, ...] = (
+        "Profil de la stratégie : le trade médian est perdant en backtest (−0,11 R) ; "
+        "l'essentiel du gain vient de quelques grandes tendances. Un faux départ est le cas "
+        "le plus fréquent.",
+        "Avantage en baisse : R total par année d'entrée 2023 +33,6 · 2024 +14,7 · "
+        "2025 +2,0 · 2026 +2,6 (spot, 3 actifs).",
+    )
 
     def __init__(self, params: DonchianParams | None = None) -> None:
         self.p = params or DonchianParams()

@@ -18,7 +18,7 @@ import asyncio
 import time
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
-from typing import Literal, Protocol
+from typing import Any, Literal, Protocol
 
 from sentinel.alerts.telegram import SentMessage
 from sentinel.core.logging import get_logger
@@ -37,12 +37,15 @@ class Signal:
     text: str
     bar: Bar
     snapshot: IndicatorSnapshot
+    payload: Any = None  # AlertContext pour les stratégies (rapport n°2, graphique)
 
 
 class Detector(Protocol):
     name: str
 
     def evaluate(self, snap: IndicatorSnapshot, bar: Bar) -> Signal | None: ...
+
+    def warm(self, snap: IndicatorSnapshot, bar: Bar) -> None: ...
 
 
 class Notifier(Protocol):
@@ -57,6 +60,9 @@ class ProbeDetector:
     Sert uniquement à mesurer la latence de bout en bout (jamais activé en production)."""
 
     name = "probe"
+
+    def warm(self, snap: IndicatorSnapshot, bar: Bar) -> None:
+        return None
 
     def evaluate(self, snap: IndicatorSnapshot, bar: Bar) -> Signal | None:
         rsi = f"{snap.rsi:.1f}" if snap.rsi is not None else "n/a"
@@ -199,3 +205,31 @@ class Pipeline:
         """Attend la fin des envois en cours (tests / arrêt propre)."""
         if self._tasks:
             await asyncio.wait(set(self._tasks), timeout=timeout_s)
+
+
+def warm_up(
+    engines: dict[StreamKey, IndicatorEngine],
+    bars_by_key: dict[StreamKey, list[Bar]],
+    detectors: Sequence[Detector],
+) -> None:
+    """Rejoue l'historique de TOUS les flux dans l'ordre chronologique de clôture (à égalité,
+    l'unité de temps supérieure d'abord, comme dans le backtest). Ainsi une stratégie
+    multi-UT voit, à chaque bougie de chauffe, le contexte tel qu'il était à ce moment-là."""
+    events = sorted(
+        (
+            (b.close_time_ms, -k.timeframe.seconds, k, b)
+            for k, bars in bars_by_key.items()
+            for b in bars
+        ),
+        key=lambda e: (e[0], e[1]),
+    )
+    for _, _, key, bar in events:
+        eng = engines[key]
+        try:
+            snap = eng.update(bar)
+        except GapDetected:
+            eng.reset()
+            snap = eng.update(bar)
+        if snap is not None:
+            for det in detectors:
+                det.warm(snap, bar)

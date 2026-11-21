@@ -1,0 +1,50 @@
+🟢 LONG ETHUSDT (spot) | Moyen terme (semaines) | Score : n/d (phase 5)
+Entrée ≈ 2 253 (ouverture suivante) | Stop : 2 106 (-6,5 %)
+Objectif : aucun — sortie au stop suiveur (plus bas 20 j, actuellement 1 822 ; il ne prend le relais que lorsqu'il dépasse le stop initial 2 106)
+Repères : +2R = 2 547 | +4R = 2 841 (pas des objectifs)
+R/R : ouvert — en backtest, gain moyen +3,67 R vs perte moyenne -0,90 R
+Risque : 0,5 % = 15,00 € → taille suggérée : 0,1021 ETH (≈ 230 €, 8 % du capital)
+Stratégie : cassure du plus haut 55 jours — Donchian 55/20 (journalier)
+Smart money : module non actif (phase 6)
+Backtest (ETH spot, cette stratégie) : 24 trades, win rate 58 %, espérance +1,76 R | hors échantillon 2023+ : 12 trades, +1,01 R
+
+────────────────────────────────────────
+
+📋 RAPPORT — LONG ETHUSDT · 19/08/2026 23:59 UTC
+
+🎯 Thèse
+Clôture à 2 253 : cassure du plus haut 55 jours. En suivi de tendance, on ne prédit pas le sommet : on prend la tendance quand elle se confirme, avec une perte limitée si c'est un faux départ, et on laisse courir sinon.
+
+🧭 Contexte
+• Régime journalier : régime mixte / transition (moyennes non alignées)
+• Volatilité : ATR 14 = 73,48 (3,3 % du prix)
+• 1d : → (au-dessus EMA50, structure mixte)
+• 4h : ↑ (au-dessus EMA50, structure HH/HL)
+• Niveaux clés : support 1 981 (1×)
+• Volume : 5,23× la moyenne des 20 dernières bougies
+
+✅ Confluences
+• Structure alignée sur 4h.
+• Volume 5,2× la moyenne 20 j : cassure soutenue.
+• Momentum MACD dans le sens du trade (histogramme positif).
+
+⚠️ Contre-arguments
+• RSI 82 : marché en excès, un repli vers le stop est probable avant toute continuation.
+• Prix étiré : 4,5 ATR au-delà de l'EMA20 ; entrée moins favorable, stop large en valeur.
+• Risque corrélé : position(s) déjà ouverte(s) selon la stratégie — BTCUSDT long (spot). BTC/ETH/SOL chutent ensemble : avec celle-ci, ≈ 1,0 % du capital exposé au même choc (plafond conseillé : 1,5 %).
+• Profil de la stratégie : le trade médian est perdant en backtest (−0,11 R) ; l'essentiel du gain vient de quelques grandes tendances. Un faux départ est le cas le plus fréquent.
+• Avantage en baisse : R total par année d'entrée 2023 +33,6 · 2024 +14,7 · 2025 +2,0 · 2026 +2,6 (spot, 3 actifs).
+
+🛑 Invalidation
+Stop initial 2 106 (6,5 % du prix) : au-delà, la cassure a échoué et la thèse est fausse. Il est fixé AVANT l'entrée et ne s'éloigne jamais.
+
+🧰 Gestion
+• Pas de prise de profit fixe. Stop suiveur = plus bas des 20 dernières bougies, actuellement 1 822 ; il ne prend le relais que lorsqu'il dépasse le stop initial 2 106. Le stop retenu est toujours le plus protecteur des deux (initial ou suiveur), mis à jour chaque jour, jamais desserré.
+• Pas de sortie temporelle : la position vit tant que la tendance tient.
+• Toute gestion différente (allègement, renforcement) n'a PAS été testée.
+
+📅 Événements à risque
+• Aucun événement listé dans config/events.yaml sur la période (calendrier tenu à la main : vérifier FOMC, CPI, résultats).
+
+📊 Backtest ETH : 24 trades, win rate 58 %, espérance +1,76 R, gain moyen +3,67 R / perte moyenne -0,90 R. Hors échantillon : 12 trades, +1,01 R. Petit échantillon par actif : chiffres indicatifs.
+Aide à la décision : aucun ordre n'est passé automatiquement, c'est toi qui décides.

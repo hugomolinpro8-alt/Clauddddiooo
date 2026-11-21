@@ -66,6 +66,21 @@ class RiskConfig(BaseModel):
     max_drawdown_pct: float = Field(10.0, gt=0)
 
 
+class StrategyEntry(BaseModel):
+    enabled: bool = False
+    markets: list[Market] = [Market.SPOT]
+    allow_short: bool = False
+    params: dict[str, Any] = {}
+
+
+class AlertConfig(BaseModel):
+    stats_dir: Path = Path("reports/stats")
+    events_file: Path = Path("config/events.yaml")
+    chart_dir: Path = Path("data/charts")
+    chart_bars: int = Field(120, ge=30)
+    events_horizon_days: int = 7
+
+
 class AppConfig(BaseModel):
     watchlist: list[str] = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
     markets: list[Market] = [Market.SPOT, Market.PERP]
@@ -77,6 +92,8 @@ class AppConfig(BaseModel):
     indicators: IndicatorConfig = IndicatorConfig()
     latency: LatencyConfig = LatencyConfig()
     risk: RiskConfig = RiskConfig()
+    strategies: dict[str, StrategyEntry] = {}
+    alerts: AlertConfig = AlertConfig()
 
     @field_validator("watchlist")
     @classmethod

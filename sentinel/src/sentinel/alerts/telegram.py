@@ -12,6 +12,7 @@ les erreurs httpx (qui contiennent l'URL) sont réécrites via `redact_text`.
 from __future__ import annotations
 
 import asyncio
+import json
 import time
 from dataclasses import dataclass
 from typing import Any
@@ -70,11 +71,23 @@ class TelegramClient:
         result: dict[str, Any] = await self._call("getMe", {})
         return result
 
-    async def _call(self, method: str, payload: dict[str, Any]) -> Any:
+    async def _call(
+        self,
+        method: str,
+        payload: dict[str, Any],
+        files: dict[str, tuple[str, bytes, str]] | None = None,
+    ) -> Any:
         attempt = 0
         while True:
             try:
-                r = await self._client.post(f"/{method}", json=payload)
+                if files:
+                    # multipart : les champs non-fichier doivent être des chaînes
+                    data = {
+                        k: v if isinstance(v, str) else json.dumps(v) for k, v in payload.items()
+                    }
+                    r = await self._client.post(f"/{method}", data=data, files=files)
+                else:
+                    r = await self._client.post(f"/{method}", json=payload)
             except httpx.HTTPError as e:
                 if attempt >= self._max_retries:
                     raise TelegramError(redact_text(f"{method}: {e!r}")) from None
@@ -122,5 +135,21 @@ class TelegramClient:
             }
         t0 = time.perf_counter_ns()
         result = await self._call("sendMessage", payload)
+        t1 = time.perf_counter_ns()
+        return SentMessage(int(result["message_id"]), t1, (t1 - t0) / 1e6)
+
+    async def send_photo(
+        self, png: bytes, caption: str = "", reply_to: int | None = None
+    ) -> SentMessage:
+        payload: dict[str, Any] = {"chat_id": self._chat_id, "caption": caption[:1024]}
+        if reply_to is not None:
+            payload["reply_parameters"] = {
+                "message_id": reply_to,
+                "allow_sending_without_reply": True,
+            }
+        t0 = time.perf_counter_ns()
+        result = await self._call(
+            "sendPhoto", payload, files={"photo": ("chart.png", png, "image/png")}
+        )
         t1 = time.perf_counter_ns()
         return SentMessage(int(result["message_id"]), t1, (t1 - t0) / 1e6)

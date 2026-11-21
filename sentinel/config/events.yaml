@@ -1,0 +1,11 @@
+# Événements à risque proches, repris dans la section « Événements à risque » des rapports.
+# À TENIR À JOUR À LA MAIN. Heures en UTC. Sources : federalreserve.gov (FOMC),
+# bls.gov (CPI, emploi), calendriers de résultats des entreprises.
+# Format :
+#   - when: "2026-12-09T19:00:00Z"
+#     name: "Décision FOMC"
+#     impact: "élevé"
+events:
+  - when: "2026-12-09T19:00:00Z"
+    name: "Décision FOMC (date à vérifier sur federalreserve.gov)"
+    impact: "élevé"

@@ -48,8 +48,13 @@ class PullbackParams:
 
 class TrendPullback:
     name = "trend_pullback"
+    label = "Pullback EMA20 (4h, filtre journalier)"
+    horizon = "Swing 1–5 j"
+    profile_warnings: tuple[str, ...] = (
+        "Stratégie REJETÉE au backtest (espérance OOS ≤ 0 après frais).",
+    )
     timeframe = Timeframe.H4
-    context = (Timeframe.D1,)
+    context: tuple[Timeframe, ...] = (Timeframe.D1,)
 
     def __init__(self, params: PullbackParams | None = None) -> None:
         self.p = params or PullbackParams()

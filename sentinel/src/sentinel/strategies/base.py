@@ -43,6 +43,9 @@ class Setup:
 
 class Strategy(Protocol):
     name: str
+    label: str
+    horizon: str
+    profile_warnings: tuple[str, ...]
     timeframe: Timeframe
     context: tuple[Timeframe, ...]
 

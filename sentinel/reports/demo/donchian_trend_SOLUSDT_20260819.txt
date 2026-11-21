@@ -1,0 +1,51 @@
+🟢 LONG SOLUSDT (spot) | Moyen terme (semaines) | Score : n/d (phase 5)
+Entrée ≈ 85,38 (ouverture suivante) | Stop : 80,02 (-6,3 %)
+Objectif : aucun — sortie au stop suiveur (plus bas 20 j, actuellement 70,58 ; il ne prend le relais que lorsqu'il dépasse le stop initial 80,02)
+Repères : +2R = 96,10 | +4R = 106,8 (pas des objectifs)
+R/R : ouvert — en backtest, gain moyen +13,78 R vs perte moyenne -0,90 R
+Risque : 0,5 % = 15,00 € → taille suggérée : 2,798 SOL (≈ 239 €, 8 % du capital)
+Stratégie : cassure du plus haut 55 jours — Donchian 55/20 (journalier)
+Smart money : module non actif (phase 6)
+Backtest (SOL spot, cette stratégie) : 16 trades, win rate 44 %, espérance +5,52 R | hors échantillon 2023+ : 13 trades, +2,01 R
+
+────────────────────────────────────────
+
+📋 RAPPORT — LONG SOLUSDT · 19/08/2026 23:59 UTC
+
+🎯 Thèse
+Clôture à 85,38 : cassure du plus haut 55 jours. En suivi de tendance, on ne prédit pas le sommet : on prend la tendance quand elle se confirme, avec une perte limitée si c'est un faux départ, et on laisse courir sinon.
+
+🧭 Contexte
+• Régime journalier : régime mixte / transition (moyennes non alignées)
+• Volatilité : ATR 14 = 2,68 (3,1 % du prix)
+• 1d : ↑ (au-dessus EMA50, structure HH/HL)
+• 4h : ↑ (au-dessus EMA50, structure HH/HL)
+• Niveaux clés : support 83,98 (1×)
+• Volume : 3,43× la moyenne des 20 dernières bougies
+
+✅ Confluences
+• Structure alignée sur 4h.
+• Volume 3,4× la moyenne 20 j : cassure soutenue.
+• Momentum MACD dans le sens du trade (histogramme positif).
+• RSI 75 : momentum sans excès.
+
+⚠️ Contre-arguments
+• Le prix est du mauvais côté de l'EMA200 journalière : cassure contre la tendance de fond, taux d'échec historiquement plus élevé.
+• Prix étiré : 3,4 ATR au-delà de l'EMA20 ; entrée moins favorable, stop large en valeur.
+• Risque corrélé : position(s) déjà ouverte(s) selon la stratégie — BTCUSDT long (spot), ETHUSDT long (spot). BTC/ETH/SOL chutent ensemble : avec celle-ci, ≈ 1,5 % du capital exposé au même choc (plafond conseillé : 1,5 %).
+• Profil de la stratégie : le trade médian est perdant en backtest (−0,11 R) ; l'essentiel du gain vient de quelques grandes tendances. Un faux départ est le cas le plus fréquent.
+• Avantage en baisse : R total par année d'entrée 2023 +33,6 · 2024 +14,7 · 2025 +2,0 · 2026 +2,6 (spot, 3 actifs).
+
+🛑 Invalidation
+Stop initial 80,02 (6,3 % du prix) : au-delà, la cassure a échoué et la thèse est fausse. Il est fixé AVANT l'entrée et ne s'éloigne jamais.
+
+🧰 Gestion
+• Pas de prise de profit fixe. Stop suiveur = plus bas des 20 dernières bougies, actuellement 70,58 ; il ne prend le relais que lorsqu'il dépasse le stop initial 80,02. Le stop retenu est toujours le plus protecteur des deux (initial ou suiveur), mis à jour chaque jour, jamais desserré.
+• Pas de sortie temporelle : la position vit tant que la tendance tient.
+• Toute gestion différente (allègement, renforcement) n'a PAS été testée.
+
+📅 Événements à risque
+• Aucun événement listé dans config/events.yaml sur la période (calendrier tenu à la main : vérifier FOMC, CPI, résultats).
+
+📊 Backtest SOL : 16 trades, win rate 44 %, espérance +5,52 R, gain moyen +13,78 R / perte moyenne -0,90 R. Hors échantillon : 13 trades, +2,01 R. Petit échantillon par actif : chiffres indicatifs.
+Aide à la décision : aucun ordre n'est passé automatiquement, c'est toi qui décides.

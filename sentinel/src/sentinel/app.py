@@ -19,6 +19,9 @@ from pathlib import Path
 import httpx
 
 from sentinel.alerts.console import ConsoleNotifier
+from sentinel.alerts.events import load_events
+from sentinel.alerts.format import format_alert
+from sentinel.alerts.reporter import ReportWorker, RichNotifier
 from sentinel.alerts.telegram import TelegramClient
 from sentinel.core.config import AppConfig, Secrets, load_config
 from sentinel.core.logging import configure_logging, get_logger
@@ -28,7 +31,15 @@ from sentinel.data.history import BinanceHistory, ParquetCache, load_warmup
 from sentinel.data.watchdog import FeedWatchdog
 from sentinel.indicators.engine import IndicatorEngine
 from sentinel.pipeline.latency import LatencyRecorder
-from sentinel.pipeline.runner import Detector, Notifier, Pipeline, ProbeDetector, stream_name
+from sentinel.pipeline.runner import (
+    Detector,
+    Pipeline,
+    ProbeDetector,
+    stream_name,
+    warm_up,
+)
+from sentinel.pipeline.strategy_detector import StrategyDetector, load_stats
+from sentinel.strategies.registry import strategy_factory
 
 log = get_logger("sentinel")
 
@@ -48,7 +59,7 @@ async def run(
     ]
     recorder = LatencyRecorder(cfg.latency.target_ms)
 
-    notifier: Notifier
+    notifier: RichNotifier
     telegram: TelegramClient | None = None
     if dry_run or not (secrets.telegram_bot_token and secrets.telegram_chat_id):
         if not dry_run:
@@ -66,23 +77,43 @@ async def run(
         with contextlib.suppress(httpx.HTTPError):
             await check_clock(history)
 
-        engines: dict[StreamKey, IndicatorEngine] = {}
-        for key in keys:
-            eng = IndicatorEngine(key, cfg.indicators)
-            for b in await load_warmup(key, cfg.history.warmup_bars, history, cache):
-                eng.update(b)
-            engines[key] = eng
+        engines = {key: IndicatorEngine(key, cfg.indicators) for key in keys}
+        bars_by_key = {
+            key: await load_warmup(key, cfg.history.warmup_bars, history, cache) for key in keys
+        }
+
+        detectors: list[Detector] = [ProbeDetector()] if probe else []
+        strat_dets: list[StrategyDetector] = []
+        for name, entry in cfg.strategies.items():
+            if not entry.enabled:
+                continue
+            det = StrategyDetector(
+                strategy_factory(name, entry),
+                entry.markets,
+                engines,
+                cfg.risk,
+                load_stats(cfg.alerts.stats_dir, name),
+                format_alert,
+            )
+            strat_dets.append(det)
+            detectors.append(det)
+        warm_up(engines, bars_by_key, detectors)
+        for key, eng in engines.items():
             snap = eng.last
             log.info(
                 "engine_ready",
                 stream=str(key),
                 bars=eng.bars_seen,
                 ready=bool(snap and snap.ready),
-                rsi=round(snap.rsi, 2) if snap and snap.rsi else None,
                 trend=str(snap.trend) if snap else None,
             )
+        open_pos = [
+            f"{d.name} {m}:{sym} {p.side.name} stop {p.stop:g}"
+            for d in strat_dets
+            for (m, sym), p in d.open_positions().items()
+        ]
+        log.info("virtual_positions_after_warmup", positions=open_pos)
 
-        detectors: list[Detector] = [ProbeDetector()] if probe else []
         pipeline = Pipeline(
             engines,
             detectors,
@@ -100,14 +131,25 @@ async def run(
             BinanceKlineFeed(m, cfg.watchlist, cfg.timeframes, cfg.binance.ws(m), cfg.feed)
             for m in cfg.markets
         ]
+        reporter = ReportWorker(
+            pipeline.post_queue,
+            notifier,
+            load_events(cfg.alerts.events_file),
+            cfg.alerts.events_horizon_days,
+            cfg.alerts.chart_bars,
+            cfg.alerts.chart_dir,
+        )
         tasks = [
             asyncio.create_task(pipeline.run(), name="pipeline"),
+            asyncio.create_task(reporter.run(), name="reporter"),
             asyncio.create_task(watchdog.run(), name="watchdog"),
             *(asyncio.create_task(f.run(pipeline.sink), name=f.name) for f in feeds),
         ]
         await notifier.send_message(
             f"🟢 Sentinel démarré — {len(keys)} flux ({', '.join(cfg.watchlist)}), "
             f"signal à la {'clôture' if cfg.signal_mode == 'close' else 'volée (intrabar)'}.\n"
+            f"Stratégies actives : {', '.join(d.name for d in strat_dets) or 'aucune'}.\n"
+            f"Positions virtuelles en cours : {'; '.join(open_pos) or 'aucune'}.\n"
             "Outil d'aide à la décision : aucun ordre n'est passé automatiquement."
         )
         try:

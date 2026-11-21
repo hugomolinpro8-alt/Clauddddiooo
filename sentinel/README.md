@@ -4,10 +4,14 @@ Outil personnel d'**aide à la décision**. Il surveille BTC, ETH et SOL en temp
 setups et t'envoie une alerte Telegram. **Il ne passe jamais d'ordre** : c'est toi qui décides
 et qui exécutes.
 
-> État : **Phase 2 terminée.** Moteur de backtest opérationnel. La première stratégie testée
-> (pullback 4h) **n'a pas passé** les critères d'activation : elle reste désactivée.
-> Voir [`reports/phase2_pullback.md`](reports/phase2_pullback.md) et le
-> [journal des essais](reports/RESEARCH_LOG.md).
+> État : **Phase 3 terminée.**
+> - Stratégie active : **Donchian 55/20 journalier, spot long** (essai n°2, validée hors
+>   échantillon). Le pullback 4h (essai n°1) a été rejeté.
+> - Chaque signal produit une alerte instantanée, puis un rapport argumenté en réponse et un
+>   graphique annoté.
+> - Rapports : [`reports/trial2_donchian.md`](reports/trial2_donchian.md),
+>   [`reports/phase2_pullback.md`](reports/phase2_pullback.md),
+>   [journal des essais](reports/RESEARCH_LOG.md).
 
 ## Installation
 
@@ -41,8 +45,15 @@ couvrent que le spot.
 
 ```bash
 uv run python scripts/download_archives.py    # ~15 s : archives Binance 2019 → aujourd'hui
-uv run python scripts/backtest_pullback.py    # ~90 s : rapport Markdown + graphique dans reports/
+uv run python scripts/backtest_pullback.py    # essai n°1 (~90 s) → reports/phase2_pullback.md
+uv run python scripts/backtest_donchian.py    # essai n°2 (~15 s) → reports/trial2_donchian.md
+uv run python scripts/demo_alert.py           # alerte + rapport + graphique du dernier signal réel
+uv run python scripts/demo_alert.py --send    # … et envoi sur ton Telegram (marqué DÉMO)
 ```
+
+Une stratégie n'est activée dans `config/config.yaml` (section `strategies`) que si elle passe
+le protocole. Les statistiques citées dans les alertes viennent de `reports/stats/<nom>.json`.
+Les événements à risque (FOMC, CPI…) se tiennent à la main dans `config/events.yaml`.
 
 Le backtest rejoue l'historique dans les **mêmes** moteurs d'indicateurs et stratégies que le
 live. Hypothèses d'exécution défavorables : entrée à l'ouverture suivante, stop supposé touché
@@ -52,7 +63,7 @@ La mécanique est vérifiée par des scénarios calculés à la main (`tests/tes
 ## Tests
 
 ```bash
-uv run pytest -q             # 62 tests, ~20 s, sans réseau
+uv run pytest -q             # 72 tests, ~15 s, sans réseau
 uv run pytest -q -s tests/test_latency.py   # affiche les percentiles de latence
 uv run ruff check src tests && uv run mypy  # style + typage strict
 ```
