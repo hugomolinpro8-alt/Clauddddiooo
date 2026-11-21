@@ -4,9 +4,10 @@ Outil personnel d'**aide à la décision**. Il surveille BTC, ETH et SOL en temp
 setups et t'envoie une alerte Telegram. **Il ne passe jamais d'ordre** : c'est toi qui décides
 et qui exécutes.
 
-> État : **Phase 1 terminée.** Flux temps réel, indicateurs incrémentaux, détection de coupure
-> et mesure de latence. Aucune stratégie n'est encore active : elles arrivent en phase 2,
-> après backtest.
+> État : **Phase 2 terminée.** Moteur de backtest opérationnel. La première stratégie testée
+> (pullback 4h) **n'a pas passé** les critères d'activation : elle reste désactivée.
+> Voir [`reports/phase2_pullback.md`](reports/phase2_pullback.md) et le
+> [journal des essais](reports/RESEARCH_LOG.md).
 
 ## Installation
 
@@ -36,10 +37,22 @@ Si `api.binance.com` est géobloqué (HTTP 451, typique des serveurs cloud amér
 `--config config/config.yaml --config config/dev-mirror.yaml`. Les miroirs publics Binance ne
 couvrent que le spot.
 
+## Recherche et backtest
+
+```bash
+uv run python scripts/download_archives.py    # ~15 s : archives Binance 2019 → aujourd'hui
+uv run python scripts/backtest_pullback.py    # ~90 s : rapport Markdown + graphique dans reports/
+```
+
+Le backtest rejoue l'historique dans les **mêmes** moteurs d'indicateurs et stratégies que le
+live. Hypothèses d'exécution défavorables : entrée à l'ouverture suivante, stop supposé touché
+avant l'objectif, gaps exécutés à l'ouverture, frais et slippage réels, funding des perps.
+La mécanique est vérifiée par des scénarios calculés à la main (`tests/test_backtest_engine.py`).
+
 ## Tests
 
 ```bash
-uv run pytest -q             # 47 tests, ~10 s, sans réseau
+uv run pytest -q             # 62 tests, ~20 s, sans réseau
 uv run pytest -q -s tests/test_latency.py   # affiche les percentiles de latence
 uv run ruff check src tests && uv run mypy  # style + typage strict
 ```

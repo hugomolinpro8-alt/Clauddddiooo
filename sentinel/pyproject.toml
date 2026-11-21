@@ -13,6 +13,7 @@ dependencies = [
     "numpy>=1.26",
     "polars>=1.0",
     "pyarrow>=16.0",
+    "matplotlib>=3.11.2",
 ]
 
 [dependency-groups]
@@ -50,7 +51,8 @@ select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF", "ASYNC"]
 ignore = ["RUF001", "RUF002", "RUF003"]  # caractères accentués dans les commentaires FR
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["ASYNC110"]  # attentes actives bornées acceptables dans les tests
+"tests/*" = ["ASYNC110", "E731"]  # attentes bornées et petites fabriques lambda dans les tests
+"scripts/*" = ["E501"]  # chaînes de mise en forme du rapport
 
 [tool.mypy]
 python_version = "3.12"

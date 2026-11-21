@@ -69,9 +69,13 @@ class IndicatorSnapshot:
 
 
 class IndicatorEngine:
-    def __init__(self, key: StreamKey, cfg: IndicatorConfig) -> None:
+    def __init__(self, key: StreamKey, cfg: IndicatorConfig, strict_gaps: bool = True) -> None:
         self.key = key
         self.cfg = cfg
+        # strict_gaps=False : pour le backtest sur archives, où un trou correspond à une
+        # vraie fermeture du marché (maintenance Binance), pas à une perte de données.
+        self.strict_gaps = strict_gaps
+        self.gaps_tolerated = 0
         self.reset()
 
     def reset(self) -> None:
@@ -108,7 +112,9 @@ class IndicatorEngine:
                 return None  # doublon (ex. message rejoué après reconnexion)
             expected = self.last_open_ms + tf_ms
             if bar.open_time_ms != expected:
-                raise GapDetected(self.key, expected, bar.open_time_ms)
+                if self.strict_gaps:
+                    raise GapDetected(self.key, expected, bar.open_time_ms)
+                self.gaps_tolerated += 1
 
         c = bar.close
         ema = {p: e.update(c) for p, e in self.ema.items()}
