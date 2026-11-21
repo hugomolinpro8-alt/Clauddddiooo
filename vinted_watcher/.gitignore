@@ -1,0 +1,11 @@
+# Secrets et données personnelles — ne jamais committer
+.env
+*.har
+*.resume.md
+config.yaml
+data/
+logs/
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/

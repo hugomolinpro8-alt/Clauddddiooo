@@ -1,0 +1,63 @@
+# Copie ce fichier en config.yaml (ignoré par git) puis adapte-le.
+# Vérifie ta config sans rien envoyer : python -m vwatch check
+
+vinted:
+  domain: www.vinted.fr      # domaine de TON compte (celui des cookies)
+  per_page: 20               # annonces récupérées par requête (les plus récentes)
+
+timezone: Europe/Paris       # pour les budgets "par jour"
+
+polling:
+  interval_seconds: 60       # délai par recherche (minimum imposé : 30 s)
+  jitter_seconds: 10         # aléa ajouté pour ne pas taper à heure fixe
+  pause_between_searches: 3  # secondes entre deux recherches (minimum 2)
+  block_pause_minutes: 30    # pause après un 403/429/captcha (doublée à chaque récidive)
+  max_consecutive_blocks: 3  # au-delà : arrêt jusqu'à /resume sur Telegram
+
+telegram:
+  enabled: true
+  listen_commands: true      # boutons Acheter/Ignorer + commandes /status, /pause...
+
+purchase:
+  mode: simulation           # "simulation" (aucun paiement) ou "real"
+  i_understand_real_money: false   # doit être true pour mode: real
+  auto_buy_enabled: false    # interrupteur GÉNÉRAL de l'auto-achat
+  max_price_per_item: 40     # € max par article, protection acheteur comprise (hors port)
+  daily_budget: 60           # € max par jour calendaire
+  weekly_budget: 150         # € max sur 7 jours glissants
+  max_auto_buys_per_search_per_day: 1   # plafonné à 1 dans le code
+  seller_blacklist:          # pseudos (ou identifiants numériques) des vendeurs
+    - vendeur_douteux_123
+
+storage:
+  db_path: data/vwatch.db
+
+logging:
+  level: INFO                # DEBUG pour voir chaque annonce rejetée et pourquoi
+  file: logs/vwatch.log
+
+searches:
+  # Méthode la plus simple : règle tes filtres sur vinted.fr, trie par
+  # "Plus récents", copie l'URL ici. Les champs ajoutés à côté complètent
+  # ou remplacent ce que contient l'URL.
+  - name: Nike Dunk 42
+    url: "https://www.vinted.fr/catalog?search_text=nike%20dunk&size_ids[]=1196&order=newest_first"
+    price_max: 60
+    exclude_keywords: [enfant, kids, "lot de", fake, réplique]
+    countries: [FR, BE]       # filtré seulement si Vinted fournit le pays du vendeur
+
+  # Méthode manuelle : identifiants numériques Vinted (repérables dans l'URL).
+  - name: Veste Carhartt M
+    search_text: carhartt veste
+    brand_ids: [362]
+    size_ids: [207]
+    status: [neuf_avec_etiquette, neuf_sans_etiquette, tres_bon_etat]
+    price_min: 10
+    price_max: 45
+    include_keywords: [veste]           # TOUS doivent apparaître dans le titre
+    include_any: [detroit, active, chore]   # AU MOINS UN
+    exclude_keywords: [taché, trou]
+    max_age_minutes: 120      # ignore les vieilles annonces "remontées"
+    interval_seconds: 90
+    auto_buy: false           # passer à true + auto_buy_enabled pour l'auto-achat
+    auto_buy_max_price: 35    # obligatoire si auto_buy: true

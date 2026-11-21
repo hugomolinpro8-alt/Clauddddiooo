@@ -1,0 +1,24 @@
+# Service systemd (Linux : Raspberry Pi, VPS…).
+# Installation : voir README, section "Faire tourner 24h/24".
+# Remplace UTILISATEUR et le chemin si besoin.
+[Unit]
+Description=Vinted Watcher (surveillance d'annonces + Telegram)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=UTILISATEUR
+WorkingDirectory=/home/UTILISATEUR/vinted_watcher
+ExecStart=/home/UTILISATEUR/vinted_watcher/.venv/bin/python -m vwatch run
+Restart=on-failure
+RestartSec=60
+# Évite une boucle de redémarrages si la config est invalide.
+StartLimitIntervalSec=600
+StartLimitBurst=5
+# Durcissement léger
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
