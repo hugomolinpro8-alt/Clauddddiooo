@@ -156,6 +156,15 @@ class Journal:
             rows = await cur.fetchall()
         return {str(k): int(n) for k, n in rows}
 
+    async def smart_money_outcomes(self) -> list[tuple[str | None, float]]:
+        """(état smart money « même/opposé/suivis » à l'alerte, R du trade papier clôturé)."""
+        async with self.db.execute(
+            "SELECT a.smart_money, p.r_net FROM alerts a JOIN paper_trades p "
+            "ON p.alert_id = a.id WHERE p.status = 'closed' AND p.r_net IS NOT NULL"
+        ) as cur:
+            rows = await cur.fetchall()
+        return [(r[0], float(r[1])) for r in rows]
+
     async def alerts_since(self, since_ms: int) -> int:
         async with self.db.execute(
             "SELECT COUNT(*) FROM alerts WHERE created_ms >= ?", (since_ms,)

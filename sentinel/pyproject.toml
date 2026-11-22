@@ -53,7 +53,7 @@ ignore = ["RUF001", "RUF002", "RUF003"]  # caractères accentués dans les comme
 
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["ASYNC110", "E731"]  # attentes bornées et petites fabriques lambda dans les tests
-"scripts/*" = ["E501"]  # chaînes de mise en forme du rapport
+"scripts/*" = ["E501", "ASYNC240"]  # chaînes de mise en forme du rapport
 
 [tool.mypy]
 python_version = "3.12"

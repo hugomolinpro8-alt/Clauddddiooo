@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from datetime import UTC, datetime
 
 import numpy as np
@@ -98,6 +98,7 @@ def weekly_text(
     ops: Mapping[str, int],
     alerts_this_week: int,
     latency: Mapping[str, float],
+    smart_money_lines: Sequence[str] = ("• Module non actif.",),
 ) -> str:
     week: list[PaperTrade] = [
         t for t in tracker.closed() if t.result and t.result.exit_ms >= week_start_ms
@@ -121,7 +122,7 @@ def weekly_text(
     for name, markets in strategies.items():
         for m in markets:
             L += strategy_block(tracker, name, m, ref_means.get(f"{name}:{m.value}"))
-    L += ["", "Smart money", "• Module non actif (phase 6) : apport non mesurable pour l'instant."]
+    L += ["", "Smart money", *smart_money_lines]
     L += ["", "Positions ouvertes", *positions_block(tracker)]
     L += ["", "Erreurs et points à corriger"]
     labels = {
@@ -144,3 +145,26 @@ def weekly_text(
         )
     L += ["", "Rappel : aide à la décision ; aucune performance future n'est assurée."]
     return "\n".join(L)
+
+
+def smart_money_effect(
+    outcomes: Sequence[tuple[str | None, float]], min_each: int = 5
+) -> list[str]:
+    """Le smart money améliore-t-il réellement les trades ? Compare le R moyen des trades
+    papier dont l'alerte avait ≥ 1 portefeuille suivi dans le même sens, aux autres."""
+    with_sm: list[float] = []
+    without: list[float] = []
+    for sm, r in outcomes:
+        same = int(sm.split("/")[0]) if sm else 0
+        (with_sm if same > 0 else without).append(r)
+    if len(with_sm) < min_each or len(without) < min_each:
+        return [
+            f"• Apport mesuré : pas assez de données ({len(with_sm)} trades avec smart money "
+            f"aligné, {len(without)} sans ; minimum {min_each} de chaque)."
+        ]
+    a, b = float(np.mean(with_sm)), float(np.mean(without))
+    verdict = "améliore" if a > b else "N'AMÉLIORE PAS — son poids dans le score doit baisser"
+    return [
+        f"• Trades avec smart money aligné : {len(with_sm)}, espérance {_r(a)} ; sans : "
+        f"{len(without)}, espérance {_r(b)} → {verdict} (petit échantillon, prudence)."
+    ]

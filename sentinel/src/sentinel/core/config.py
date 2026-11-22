@@ -96,6 +96,16 @@ class PaperConfig(BaseModel):
     divergence_p_value: float = Field(0.05, gt=0, lt=0.5)
 
 
+class SmartMoneyConfig(BaseModel):
+    enabled: bool = True
+    wallets_file: Path = Path("data/smart_money/wallets.json")
+    poll_s: float = Field(60.0, ge=15)
+    candidates: int = Field(200, ge=10)
+    reselect_day: int = Field(1, ge=1, le=28, description="jour du mois de la réévaluation")
+    reselect_hour_utc: int = Field(3, ge=0, le=23)
+    max_age_days: int = 35  # sélection plus vieille → relancée au démarrage
+
+
 class AppConfig(BaseModel):
     watchlist: list[str] = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
     markets: list[Market] = [Market.SPOT, Market.PERP]
@@ -110,6 +120,7 @@ class AppConfig(BaseModel):
     strategies: dict[str, StrategyEntry] = {}
     alerts: AlertConfig = AlertConfig()
     paper: PaperConfig = PaperConfig()
+    smart_money: SmartMoneyConfig = SmartMoneyConfig()
 
     @field_validator("watchlist")
     @classmethod

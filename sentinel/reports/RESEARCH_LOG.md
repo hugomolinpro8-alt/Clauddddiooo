@@ -51,3 +51,17 @@ paper trading.
   les alertes sont indicatives, seules les statistiques agrégées ont un sens statistique.
 - Deux critères (concentration, coûts ×2) ont été ajoutés après la 1re exécution ; ils ne
   pouvaient que durcir le verdict.
+
+
+## Smart money (phase 6, 2026-11-22)
+
+- 200 candidats du classement Hyperliquid évalués avec les critères du cahier des charges :
+  **0 retenu**. Motif principal : drawdown > 30 % (163/200 ; médiane 86-100 %).
+- Deux bugs trouvés par le diagnostic sur données réelles et corrigés : part de martingale
+  > 100 % (positions ouvertes avant la fenêtre) et copie sans plafond de levier.
+- Mesure du drawdown corrigée en cours de route (la 1re version divisait la chute du PnL par
+  la valeur du compte, faussée par les transferts) ; seuil inchangé. Modified Dietz donne la
+  même conclusion.
+- L'apport du smart money au score n'est PAS mesurable aujourd'hui (aucun portefeuille, et
+  ~10 signaux Donchian par an). Chaque alerte journalise l'état smart money ; le rapport
+  hebdomadaire compare le R des trades avec / sans smart money aligné dès 5 trades de chaque.

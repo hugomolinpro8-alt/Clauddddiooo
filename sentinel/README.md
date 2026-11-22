@@ -4,7 +4,7 @@ Outil personnel d'**aide à la décision**. Il surveille BTC, ETH et SOL en temp
 setups et t'envoie une alerte Telegram. **Il ne passe jamais d'ordre** : c'est toi qui décides
 et qui exécutes.
 
-> État : **Phases 1 à 5 et 7 terminées.**
+> État : **Phases 1 à 7 terminées.**
 > - Stratégie active : **Donchian 55/20 journalier, spot long** (essai n°2, validée hors
 >   échantillon). Le pullback 4h (essai n°1) a été rejeté.
 > - Chaque signal produit une alerte instantanée, puis un rapport argumenté en réponse et un
@@ -81,6 +81,21 @@ La mécanique est vérifiée par des scénarios calculés à la main (`tests/tes
 - Score 0-100 : régime, technique, multi-unités de temps, smart money. **Non validé** hors
   échantillon (`reports/phase5_score.md`) : affiché « indicatif », ne filtre aucune alerte.
 
+## Smart money (Hyperliquid)
+
+```bash
+uv run python scripts/select_wallets.py --candidates 200   # → reports/smart_money_selection.md
+```
+
+Sélection stricte (historique ≥ 6 mois, drawdown ≤ 30 % en rendement pondéré dans le temps,
+≥ 60 % de mois positifs, pas de « coup unique », levier raisonnable, pas de martingale), puis
+**rejeu de copie sur 90 jours avec ton capital**, tes frais, 60 s de délai et l'ordre minimum.
+Réévaluation automatique chaque mois. Les portefeuilles retenus ne font qu'ajouter/retirer des
+points au score et apparaître dans les confluences ou contre-arguments : jamais d'alerte seule,
+jamais de copie automatique. **Au 22/11/2026 : 0 portefeuille retenu sur 200** (voir le rapport).
+
+Actions US (Form 4, 13F) : non concerné, le système ne couvre que la crypto.
+
 ## Paper trading, journal et commandes
 
 Chaque alerte envoyée devient un trade simulé, géré par **le même code que le backtest**
@@ -106,7 +121,7 @@ Commandes Telegram (seul ton `TELEGRAM_CHAT_ID` est obéi) : `/status`, `/stats`
 ## Tests
 
 ```bash
-uv run pytest -q             # 94 tests, ~15 s, sans réseau
+uv run pytest -q             # 103 tests, ~15 s, sans réseau
 uv run pytest -q -s tests/test_latency.py   # affiche les percentiles de latence
 uv run ruff check src tests && uv run mypy  # style + typage strict
 ```

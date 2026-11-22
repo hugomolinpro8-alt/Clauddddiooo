@@ -36,7 +36,7 @@ from sentinel.data.history import BinanceHistory, ParquetCache, load_warmup
 from sentinel.data.watchdog import FeedWatchdog
 from sentinel.indicators.engine import IndicatorEngine
 from sentinel.journal.db import Journal, JournalWriter
-from sentinel.paper.reporting import weekly_text
+from sentinel.paper.reporting import smart_money_effect, weekly_text
 from sentinel.paper.service import PaperService, now_ms
 from sentinel.paper.tracker import PaperTracker
 from sentinel.pipeline.latency import LatencyRecorder
@@ -49,6 +49,14 @@ from sentinel.pipeline.runner import (
     warm_up,
 )
 from sentinel.pipeline.strategy_detector import StrategyDetector, load_reference_r, load_stats
+from sentinel.smart_money.hl_client import HyperliquidClient
+from sentinel.smart_money.selection import CopyCosts, Criteria
+from sentinel.smart_money.service import (
+    SmartMoneyTracker,
+    load_selection,
+    run_selection,
+    save_selection,
+)
 from sentinel.strategies.registry import strategy_factory
 
 log = get_logger("sentinel")
@@ -132,6 +140,16 @@ async def run(
         gate.paused = bool(await journal.get_state("paused", False))
         service = PaperService(tracker, writer, notifier)
 
+        # --- smart money : suivi en mémoire, jamais sur le chemin critique ----------------
+        sm_cfg = cfg.smart_money
+        hl_http = httpx.AsyncClient(http2=True)
+        hl = HyperliquidClient(hl_http)
+        sm_tracker = SmartMoneyTracker(
+            hl, load_selection(sm_cfg.wallets_file) if sm_cfg.enabled else [], sm_cfg.poll_s
+        )
+        sm_crit = Criteria()
+        sm_costs = CopyCosts(capital=cfg.risk.capital_eur)
+
         score_file = cfg.alerts.stats_dir / "score.json"
         score_validated = bool(
             score_file.exists() and json.loads(score_file.read_text()).get("validated")
@@ -148,6 +166,7 @@ async def run(
                 format_alert,
                 open_risk_pct=tracker.open_risk_pct,
                 score_validated=score_validated,
+                smart_money=sm_tracker.view if sm_cfg.enabled else None,
             )
             strat_dets.append(det)
             detectors.append(det)
@@ -201,6 +220,9 @@ async def run(
 
         async def weekly() -> str:
             since = now_ms() - 7 * 86_400_000
+            sm_lines = [sm_tracker.describe().split("\n")[0].replace("🐋 ", "• ")]
+            sm_lines += [f"• {c}" for c in sm_tracker.changes[-5:]]
+            sm_lines += smart_money_effect(await journal.smart_money_outcomes())
             return weekly_text(
                 tracker,
                 strat_markets,
@@ -209,7 +231,46 @@ async def run(
                 await journal.ops_counts(since),
                 await journal.alerts_since(since),
                 recorder.summary(),
+                sm_lines,
             )
+
+        async def smart_money_reselect_loop() -> None:
+            """Sélection au démarrage si absente/périmée, puis réévaluation mensuelle :
+            un portefeuille qui ne passe plus les critères est retiré."""
+            f = sm_cfg.wallets_file
+            age_days = (time.time() - f.stat().st_mtime) / 86400 if f.exists() else 1e9
+            first = age_days > sm_cfg.max_age_days
+            while True:
+                if not first:
+                    now = datetime.now(UTC)
+                    target = now.replace(
+                        day=sm_cfg.reselect_day,
+                        hour=sm_cfg.reselect_hour_utc,
+                        minute=0,
+                        second=0,
+                        microsecond=0,
+                    )
+                    if target <= now:
+                        y, m = (now.year + 1, 1) if now.month == 12 else (now.year, now.month + 1)
+                        target = target.replace(year=y, month=m)
+                    await asyncio.sleep((target - now).total_seconds())
+                first = False
+                old = set(sm_tracker.wallets)
+                try:
+                    verdicts = await run_selection(hl, sm_crit, sm_costs, sm_cfg.candidates)
+                    new = await asyncio.to_thread(save_selection, verdicts, f, sm_crit, sm_costs)
+                except Exception as e:
+                    log.error("smart_money_selection_failed", error=repr(e))
+                    service.ops("report_failure", "smart money selection")
+                    await asyncio.sleep(6 * 3600)
+                    continue
+                sm_tracker.set_wallets(new)
+                added, removed = set(new) - old, old - set(new)
+                with contextlib.suppress(Exception):
+                    await notifier.send_message(
+                        f"🐋 Réévaluation smart money : {len(new)} portefeuille(s) retenu(s) sur "
+                        f"{len(verdicts)} évalués (+{len(added)} / −{len(removed)}). /wallets"
+                    )
 
         async def weekly_loop() -> None:
             while True:
@@ -281,6 +342,14 @@ async def run(
             asyncio.create_task(writer.run(), name="journal"),
             asyncio.create_task(service.run(), name="paper"),
             asyncio.create_task(weekly_loop(), name="weekly"),
+            *(
+                [
+                    asyncio.create_task(sm_tracker.run(), name="smart_money"),
+                    asyncio.create_task(smart_money_reselect_loop(), name="sm_reselect"),
+                ]
+                if sm_cfg.enabled
+                else []
+            ),
             *(asyncio.create_task(f.run(pipeline.sink), name=f.name) for f in feeds),
         ]
         if telegram is not None and secrets.telegram_chat_id:
@@ -297,6 +366,7 @@ async def run(
                 ref_means,
                 time.monotonic(),
                 weekly,
+                sm_tracker.describe,
             )
             bot = CommandBot(telegram, secrets.telegram_chat_id, Commands(ctx))
             tasks.append(asyncio.create_task(bot.run(), name="commands"))
@@ -341,6 +411,7 @@ async def run(
                 t.cancel()
             await asyncio.gather(*tasks, return_exceptions=True)
             await journal.close()
+            await hl_http.aclose()
             if telegram:
                 await telegram.aclose()
         summary = recorder.summary()

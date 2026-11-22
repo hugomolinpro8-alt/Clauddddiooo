@@ -46,6 +46,7 @@ class CommandContext:
     ref_means: Mapping[str, float]
     started_mono: float
     weekly: Callable[[], Awaitable[str]]
+    wallets: Callable[[], str] = lambda: "🐋 Smart money : module non actif."
 
 
 HELP = (
@@ -136,10 +137,7 @@ class Commands:
         )
 
     async def cmd_wallets(self, _a: list[str]) -> str:
-        return (
-            "🐋 Smart money : module non actif (phase 6). Aucun portefeuille suivi. "
-            "Il ne sera ajouté qu'avec des portefeuilles sélectionnés et rejoués sur 90 jours."
-        )
+        return self.c.wallets()
 
     async def cmd_pause(self, _a: list[str]) -> str:
         self.c.gate.paused = True

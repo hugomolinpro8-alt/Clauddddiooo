@@ -281,7 +281,7 @@ async def test_commands_authorized_only_and_pause_resume() -> None:
     assert "PAUSE" in texts[1]  # /status pendant la pause
     assert texts[2].startswith("▶️") and not sys_.gate.paused
     assert "STATISTIQUES PAPER" in texts[3] and "backtest hors échantillon" in texts[3]
-    assert "non actif (phase 6)" in texts[4]
+    assert "Smart money" in texts[4]
     assert "Commande inconnue" in texts[5]
     assert texts[6] == "hebdo"
     assert tr.sent[0][1] == 102  # répond au message de la commande
