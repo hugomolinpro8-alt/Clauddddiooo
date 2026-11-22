@@ -65,7 +65,7 @@ def seconds_until_weekly(now: datetime, weekday: int | None, hour_utc: int) -> f
     days = 0 if weekday is None else (weekday - now.weekday()) % 7
     target += timedelta(days=days)
     if target <= now:
-        target += timedelta(days=7)
+        target += timedelta(days=1 if weekday is None else 7)
     return (target - now).total_seconds()
 
 
