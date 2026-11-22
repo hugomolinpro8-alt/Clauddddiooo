@@ -63,7 +63,8 @@ class LatencyConfig(BaseModel):
 class RiskConfig(BaseModel):
     capital_eur: float = Field(3000.0, gt=0)
     risk_per_trade_pct: float = Field(0.5, gt=0, le=2.0)
-    max_drawdown_pct: float = Field(10.0, gt=0)
+    max_drawdown_pct: float = Field(10.0, gt=0, description="Coupe-circuit : mode observation")
+    max_open_risk_pct: float = Field(1.5, gt=0, description="Risque ouvert total (corrélé)")
 
 
 class StrategyEntry(BaseModel):
@@ -81,6 +82,14 @@ class AlertConfig(BaseModel):
     events_horizon_days: int = 7
 
 
+class PaperConfig(BaseModel):
+    journal_path: Path = Path("data/journal.sqlite")
+    weekly_weekday: int = Field(0, ge=0, le=6, description="0 = lundi")
+    weekly_hour_utc: int = Field(7, ge=0, le=23)
+    divergence_min_trades: int = Field(8, ge=3)
+    divergence_p_value: float = Field(0.05, gt=0, lt=0.5)
+
+
 class AppConfig(BaseModel):
     watchlist: list[str] = ["BTCUSDT", "ETHUSDT", "SOLUSDT"]
     markets: list[Market] = [Market.SPOT, Market.PERP]
@@ -94,6 +103,7 @@ class AppConfig(BaseModel):
     risk: RiskConfig = RiskConfig()
     strategies: dict[str, StrategyEntry] = {}
     alerts: AlertConfig = AlertConfig()
+    paper: PaperConfig = PaperConfig()
 
     @field_validator("watchlist")
     @classmethod

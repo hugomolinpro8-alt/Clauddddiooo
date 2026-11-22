@@ -8,6 +8,7 @@ mais ne peut ni retarder ni bloquer les alertes suivantes.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Protocol
@@ -40,6 +41,7 @@ class ReportWorker:
         events_horizon_days: int = 7,
         chart_bars: int = 120,
         chart_dir: Path | None = None,
+        on_error: Callable[[str], None] | None = None,
     ) -> None:
         self.queue = queue
         self.notifier = notifier
@@ -48,6 +50,7 @@ class ReportWorker:
         self.chart_bars = chart_bars
         self.chart_dir = chart_dir
         self.reports_sent = 0
+        self.on_error = on_error or (lambda _e: None)
 
     async def handle(self, sig: Signal, sent: SentMessage) -> None:
         ctx = sig.payload
@@ -73,3 +76,4 @@ class ReportWorker:
                 await self.handle(sig, sent)
             except Exception as e:
                 log.error("report_failed", stream=str(sig.key), error=repr(e))
+                self.on_error(f"{sig.key}: {e!r}")

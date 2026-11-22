@@ -57,6 +57,11 @@ class FeedWatchdog:
                 events.append(WatchdogEvent(name, True, silent))
         return events
 
+    def silence(self) -> dict[str, float]:
+        """Secondes écoulées depuis le dernier message, par flux."""
+        now = self._clock()
+        return {name: now - last for name, last in self._last.items()}
+
     @property
     def stale(self) -> set[str]:
         return set(self._stale_since)

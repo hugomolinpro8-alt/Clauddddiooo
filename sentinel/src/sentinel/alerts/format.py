@@ -122,6 +122,16 @@ def format_alert(c: AlertContext) -> str:
         f"taille suggérée : {fmt_qty(sz.qty)} {base} (≈ {fmt_num(sz.notional, 0)}{NNBSP}€, "
         f"{fmt_pct(sz.capital_share, 0)} du capital){capped}"
     )
+    if sz.risk_pct <= 0:
+        lines.append(
+            f"⛔ Plafond de risque ouvert atteint ({fmt_num(c.open_risk_pct, 1)}{NNBSP}% déjà "
+            "engagés sur des actifs corrélés) : ne pas prendre ce trade."
+        )
+    elif sz.risk_pct < c.base_risk_pct:
+        lines.append(
+            f"⚠️ Taille réduite : {fmt_num(c.open_risk_pct, 1)}{NNBSP}% déjà engagés, plafond "
+            f"de risque ouvert total {fmt_num(c.max_open_risk_pct, 1)}{NNBSP}%."
+        )
     if sz.liq_distance_pct is not None:
         lines.append(
             f"Perp : levier {sz.leverage:.1f}×, liquidation ≈ "
@@ -257,7 +267,7 @@ def confluences_and_risks(c: AlertContext) -> tuple[list[str], list[str]]:
             f"Risque corrélé : position(s) déjà ouverte(s) selon la stratégie — "
             f"{', '.join(c.other_positions)}. BTC/ETH/SOL chutent ensemble : avec celle-ci, "
             f"≈ {fmt_num(n * c.size.risk_pct, 1)}{NNBSP}% du capital exposé au même choc "
-            "(plafond conseillé : 1,5 %)."
+            f"(plafond : {fmt_num(c.max_open_risk_pct, 1)}{NNBSP}%)."
         )
     else:
         con.append(

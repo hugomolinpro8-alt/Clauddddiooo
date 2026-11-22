@@ -26,7 +26,7 @@ from sentinel.core.logging import get_logger
 from sentinel.core.models import Bar, Market, StreamKey, Timeframe
 from sentinel.indicators.engine import IndicatorEngine, IndicatorSnapshot
 from sentinel.pipeline.runner import Signal
-from sentinel.risk.sizing import SizePlan, position_size
+from sentinel.risk.sizing import SizePlan, allowed_risk_pct, position_size
 from sentinel.strategies.base import Setup, Side, Strategy
 
 log = get_logger(__name__)
@@ -53,6 +53,17 @@ def load_stats(stats_dir: Path, strategy: str) -> dict[str, AssetStats]:
     return {k: AssetStats(**v) for k, v in data.get("per_asset", {}).items()}
 
 
+def load_reference_r(stats_dir: Path, strategy: str) -> dict[str, list[float]]:
+    """{"<stratégie>:<marché>": [R des trades hors échantillon]} pour le test de divergence."""
+    p = stats_dir / f"{strategy}.json"
+    if not p.exists():
+        return {}
+    data = json.loads(p.read_text(encoding="utf-8"))
+    return {
+        f"{strategy}:{m}": list(v.get("oos_r", [])) for m, v in data.get("per_market", {}).items()
+    }
+
+
 @dataclass(frozen=True, slots=True)
 class AlertContext:
     """Instantané figé au moment du signal : tout ce que le rapport et le graphique utilisent."""
@@ -71,6 +82,9 @@ class AlertContext:
     history: tuple[Bar, ...]  # dernières bougies de l'UT de la stratégie, pour le graphique
     # autres positions virtuelles ouvertes au moment du signal (risque corrélé cumulé)
     other_positions: tuple[str, ...] = ()
+    base_risk_pct: float = 0.5  # risque prévu par trade ; size.risk_pct peut être plus bas
+    open_risk_pct: float = 0.0  # risque déjà ouvert (paper) au moment du signal
+    max_open_risk_pct: float = 1.5
 
 
 @dataclass(slots=True)
@@ -91,6 +105,7 @@ class StrategyDetector:
         stats: Mapping[str, AssetStats],
         format_alert: Callable[[AlertContext], str],
         history_len: int = 400,  # ≥ 200 pour tracer l'EMA200 sur le graphique
+        open_risk_pct: Callable[[], float] | None = None,
     ) -> None:
         proto = make_strategy()
         self.name = proto.name
@@ -105,6 +120,7 @@ class StrategyDetector:
         self._history: dict[tuple[Market, str], deque[Bar]] = {}
         self.positions: dict[tuple[Market, str], VirtualPosition] = {}
         self._history_len = history_len
+        self._open_risk_pct = open_risk_pct or (lambda: 0.0)
 
     def _accepts(self, bar: Bar) -> bool:
         return bar.key.market in self.markets and bar.key.timeframe is self._proto.timeframe
@@ -174,10 +190,14 @@ class StrategyDetector:
             for (m, sym), p in self.positions.items()
             if (m, sym) != k
         )
+        open_pct = self._open_risk_pct()
+        risk_pct = allowed_risk_pct(
+            self.risk.risk_per_trade_pct, self.risk.max_open_risk_pct, open_pct
+        )
         try:
             size = position_size(
                 self.risk.capital_eur,
-                self.risk.risk_per_trade_pct,
+                risk_pct,
                 setup.signal_close,
                 setup.stop,
                 bar.key.market,
@@ -199,6 +219,9 @@ class StrategyDetector:
             stats=self.stats.get(f"{bar.key.market.value}:{bar.key.symbol}"),
             history=tuple(self._history[k]),
             other_positions=others,
+            base_risk_pct=self.risk.risk_per_trade_pct,
+            open_risk_pct=open_pct,
+            max_open_risk_pct=self.risk.max_open_risk_pct,
         )
         return Signal(bar.key, self.name, self.format_alert(ctx), bar, snap, payload=ctx)
 

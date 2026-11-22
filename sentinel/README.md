@@ -4,11 +4,13 @@ Outil personnel d'**aide à la décision**. Il surveille BTC, ETH et SOL en temp
 setups et t'envoie une alerte Telegram. **Il ne passe jamais d'ordre** : c'est toi qui décides
 et qui exécutes.
 
-> État : **Phase 3 terminée.**
+> État : **Phase 4 terminée.**
 > - Stratégie active : **Donchian 55/20 journalier, spot long** (essai n°2, validée hors
 >   échantillon). Le pullback 4h (essai n°1) a été rejeté.
 > - Chaque signal produit une alerte instantanée, puis un rapport argumenté en réponse et un
 >   graphique annoté.
+> - Chaque alerte est suivie en paper trading (journal SQLite), avec rapport hebdomadaire,
+>   commandes Telegram, coupe-circuit et détection de divergence paper / backtest.
 > - Rapports : [`reports/trial2_donchian.md`](reports/trial2_donchian.md),
 >   [`reports/phase2_pullback.md`](reports/phase2_pullback.md),
 >   [journal des essais](reports/RESEARCH_LOG.md).
@@ -60,10 +62,32 @@ live. Hypothèses d'exécution défavorables : entrée à l'ouverture suivante, 
 avant l'objectif, gaps exécutés à l'ouverture, frais et slippage réels, funding des perps.
 La mécanique est vérifiée par des scénarios calculés à la main (`tests/test_backtest_engine.py`).
 
+## Paper trading, journal et commandes
+
+Chaque alerte envoyée devient un trade simulé, géré par **le même code que le backtest**
+(`backtest/position.py`) : entrée à l'ouverture suivante, stops, frais, slippage. Un écart
+entre paper et backtest ne peut donc venir que du marché. Vérifié :
+
+```bash
+uv run python scripts/paper_replay.py   # rejoue 2023 → aujourd'hui dans le système live complet
+```
+
+- Journal : `data/journal.sqlite` (alertes, trades papier, incidents, état). Au redémarrage,
+  les positions ouvertes sont rechargées et rejouées sur les bougies manquées.
+- Risque : 0,5 % par trade, risque ouvert total plafonné à 1,5 % (BTC/ETH/SOL sont corrélés).
+- Coupe-circuit : au-delà de −10 % de drawdown papier, alertes en **mode observation**.
+- Divergence : à partir de 8 trades clôturés, test statistique paper vs backtest hors
+  échantillon ; si la probabilité de malchance passe sous 5 %, le bot propose de suspendre.
+- Rapport hebdomadaire le lundi 07:00 UTC (réglable dans `paper:`), ou `/weekly`.
+
+Commandes Telegram (seul ton `TELEGRAM_CHAT_ID` est obéi) : `/status`, `/stats`,
+`/watchlist`, `/wallets`, `/pause`, `/resume`, `/resume coupe-circuit`, `/weekly`, `/help`.
+`/pause` coupe l'envoi des alertes ; le paper trading continue de suivre les signaux.
+
 ## Tests
 
 ```bash
-uv run pytest -q             # 72 tests, ~15 s, sans réseau
+uv run pytest -q             # 83 tests, ~15 s, sans réseau
 uv run pytest -q -s tests/test_latency.py   # affiche les percentiles de latence
 uv run ruff check src tests && uv run mypy  # style + typage strict
 ```

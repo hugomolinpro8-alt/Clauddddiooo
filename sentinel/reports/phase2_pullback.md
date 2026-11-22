@@ -1,6 +1,6 @@
 # Essai n°1 — Pullback dans la tendance (4h, filtre journalier)
 
-_Généré le 2026-11-21 23:10 UTC par `uv run python scripts/backtest_pullback.py`. Aucun chiffre n'est saisi à la main._
+_Généré le 2026-11-22 00:47 UTC par `uv run python scripts/backtest_pullback.py`. Aucun chiffre n'est saisi à la main._
 
 ## Règles (figées avant toute exécution)
 
@@ -205,4 +205,4 @@ _Lecture : si seule une petite « île » de paramètres est positive, c'est du 
 ![Équité](phase2_pullback_equity.png)
 
 
-_Temps de calcul : 80 s._
+_Temps de calcul : 77 s._

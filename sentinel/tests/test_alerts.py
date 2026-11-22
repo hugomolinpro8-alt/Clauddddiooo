@@ -43,8 +43,14 @@ def _bars(n: int = 900, seed: int = 11) -> list:  # type: ignore[type-arg]
 
 
 def _detector(engines: dict[StreamKey, IndicatorEngine]) -> StrategyDetector:
-    return StrategyDetector(lambda: DonchianTrend(DonchianParams()), [Market.SPOT], engines,
-                            RiskConfig(), STATS, format_alert)
+    return StrategyDetector(
+        lambda: DonchianTrend(DonchianParams()),
+        [Market.SPOT],
+        engines,
+        RiskConfig(),
+        STATS,
+        format_alert,
+    )
 
 
 def _collect_signals(bars: list) -> tuple[StrategyDetector, list]:  # type: ignore[type-arg]
@@ -100,20 +106,41 @@ def test_alert_format_fields() -> None:
     text = format_alert(_ctx())
     first = text.splitlines()[0]
     assert first.startswith("🟢 LONG BTCUSDT (spot)")
-    for needle in ("Entrée ≈", "Stop :", "Objectif : aucun", "Repères : +2R", "Risque : 0,5",
-                   "taille suggérée", "Stratégie : cassure du plus haut 55 jours",
-                   "Smart money", "Backtest (BTC spot, cette stratégie) : 24 trades"):
+    for needle in (
+        "Entrée ≈",
+        "Stop :",
+        "Objectif : aucun",
+        "Repères : +2R",
+        "Risque : 0,5",
+        "taille suggérée",
+        "Stratégie : cassure du plus haut 55 jours",
+        "Smart money",
+        "Backtest (BTC spot, cette stratégie) : 24 trades",
+    ):
         assert needle in text, needle
     assert len(text) < 1000  # message court, lisible sur téléphone
 
 
 def test_report_has_all_sections_and_counterarguments() -> None:
     ctx = _ctx()
-    ev = [RiskEvent(__import__("datetime").datetime(2030, 1, 1, tzinfo=__import__("datetime").UTC),
-                    "Décision FOMC", "élevé")]
+    ev = [
+        RiskEvent(
+            __import__("datetime").datetime(2030, 1, 1, tzinfo=__import__("datetime").UTC),
+            "Décision FOMC",
+            "élevé",
+        )
+    ]
     text = format_report(ctx, ev)
-    for sec in ("🎯 Thèse", "🧭 Contexte", "✅ Confluences", "⚠️ Contre-arguments",
-                "🛑 Invalidation", "🧰 Gestion", "📅 Événements à risque", "Décision FOMC"):
+    for sec in (
+        "🎯 Thèse",
+        "🧭 Contexte",
+        "✅ Confluences",
+        "⚠️ Contre-arguments",
+        "🛑 Invalidation",
+        "🧰 Gestion",
+        "📅 Événements à risque",
+        "Décision FOMC",
+    ):
         assert sec in text, sec
     _, con = confluences_and_risks(ctx)
     assert len(con) >= 3  # jamais vide : au minimum corrélation + profil de la stratégie
@@ -165,8 +192,13 @@ async def test_full_flow_alert_then_report_then_chart() -> None:
         form = await req.post()
         counter += 1
         photo = form["photo"]
-        calls.append(("photo", {"reply": form["reply_parameters"],
-                                "size": len(photo.file.read())}, time.perf_counter()))  # type: ignore[union-attr]
+        calls.append(
+            (
+                "photo",
+                {"reply": form["reply_parameters"], "size": len(photo.file.read())},
+                time.perf_counter(),
+            )
+        )  # type: ignore[union-attr]
         return web.json_response({"ok": True, "result": {"message_id": counter}})
 
     app = web.Application()
@@ -195,8 +227,11 @@ async def test_full_flow_alert_then_report_then_chart() -> None:
             live_bar = bars[cut]
             from dataclasses import replace
 
-            live_bar = replace(live_bar, recv_mono_ns=time.perf_counter_ns(),
-                               event_time_ms=time.time_ns() // 1_000_000)
+            live_bar = replace(
+                live_bar,
+                recv_mono_ns=time.perf_counter_ns(),
+                event_time_ms=time.time_ns() // 1_000_000,
+            )
             pipe.process(live_bar)
             for _ in range(300):
                 if worker.reports_sent:

@@ -14,10 +14,14 @@ import argparse
 import asyncio
 import contextlib
 import json
+import time
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import httpx
+import numpy as np
 
+from sentinel.alerts.commands import CommandBot, CommandContext, Commands
 from sentinel.alerts.console import ConsoleNotifier
 from sentinel.alerts.events import load_events
 from sentinel.alerts.format import format_alert
@@ -30,18 +34,33 @@ from sentinel.data.feeds.binance import BinanceKlineFeed
 from sentinel.data.history import BinanceHistory, ParquetCache, load_warmup
 from sentinel.data.watchdog import FeedWatchdog
 from sentinel.indicators.engine import IndicatorEngine
+from sentinel.journal.db import Journal, JournalWriter
+from sentinel.paper.reporting import weekly_text
+from sentinel.paper.service import PaperService, now_ms
+from sentinel.paper.tracker import PaperTracker
 from sentinel.pipeline.latency import LatencyRecorder
 from sentinel.pipeline.runner import (
     Detector,
+    Gate,
     Pipeline,
     ProbeDetector,
     stream_name,
     warm_up,
 )
-from sentinel.pipeline.strategy_detector import StrategyDetector, load_stats
+from sentinel.pipeline.strategy_detector import StrategyDetector, load_reference_r, load_stats
 from sentinel.strategies.registry import strategy_factory
 
 log = get_logger("sentinel")
+
+
+def seconds_until_weekly(now: datetime, weekday: int, hour_utc: int) -> float:
+    """Secondes jusqu'au prochain (jour de semaine, heure UTC) strictement futur."""
+    target = now.replace(hour=hour_utc, minute=0, second=0, microsecond=0)
+    days = (weekday - now.weekday()) % 7
+    target += timedelta(days=days)
+    if target <= now:
+        target += timedelta(days=7)
+    return (target - now).total_seconds()
 
 
 async def check_clock(history: BinanceHistory) -> float:
@@ -82,11 +101,34 @@ async def run(
             key: await load_warmup(key, cfg.history.warmup_bars, history, cache) for key in keys
         }
 
+        # --- journal et paper trading (rechargés AVANT la chauffe : la chauffe rejoue les
+        # bougies manquées pendant un arrêt sur les trades papier ouverts) ----------------
+        journal = await Journal(cfg.paper.journal_path).open()
+        writer = JournalWriter(journal)
+        enabled = {n: e for n, e in cfg.strategies.items() if e.enabled}
+        ref_r: dict[str, list[float]] = {}
+        for name in enabled:
+            ref_r.update(load_reference_r(cfg.alerts.stats_dir, name))
+        ref_means = {k: float(np.mean(v)) for k, v in ref_r.items() if v}
+        tracker = PaperTracker(
+            cfg.risk,
+            ref_oos_r=ref_r,
+            divergence_min_trades=cfg.paper.divergence_min_trades,
+            divergence_alpha=cfg.paper.divergence_p_value,
+        )
+        tracker.load(
+            await journal.paper(("pending", "open", "closed", "cancelled")),
+            next_alert_id=await journal.max_id("alerts") + 1,
+            peak_equity=await journal.get_state("peak_equity"),
+            breaker=bool(await journal.get_state("breaker", False)),
+        )
+        gate = Gate(observation=lambda: tracker.breaker_tripped)
+        gate.paused = bool(await journal.get_state("paused", False))
+        service = PaperService(tracker, writer, notifier)
+
         detectors: list[Detector] = [ProbeDetector()] if probe else []
         strat_dets: list[StrategyDetector] = []
-        for name, entry in cfg.strategies.items():
-            if not entry.enabled:
-                continue
+        for name, entry in enabled.items():
             det = StrategyDetector(
                 strategy_factory(name, entry),
                 entry.markets,
@@ -94,10 +136,12 @@ async def run(
                 cfg.risk,
                 load_stats(cfg.alerts.stats_dir, name),
                 format_alert,
+                open_risk_pct=tracker.open_risk_pct,
             )
             strat_dets.append(det)
             detectors.append(det)
-        warm_up(engines, bars_by_key, detectors)
+        warm_up(engines, bars_by_key, detectors, observers=[tracker])
+        service.flush_writes()
         for key, eng in engines.items():
             snap = eng.last
             log.info(
@@ -108,11 +152,9 @@ async def run(
                 trend=str(snap.trend) if snap else None,
             )
         open_pos = [
-            f"{d.name} {m}:{sym} {p.side.name} stop {p.stop:g}"
-            for d in strat_dets
-            for (m, sym), p in d.open_positions().items()
+            f"{t.symbol} {t.setup.side.name.lower()} ({t.status})" for t in tracker.active()
         ]
-        log.info("virtual_positions_after_warmup", positions=open_pos)
+        log.info("paper_positions_after_warmup", positions=open_pos)
 
         pipeline = Pipeline(
             engines,
@@ -121,6 +163,10 @@ async def run(
             recorder,
             backfill=lambda k, start: history.fetch_range(k, start),
             signal_mode=cfg.signal_mode,
+            observers=[tracker],
+            gate=gate,
+            on_sent=[service.on_sent],
+            ops=service.ops,
         )
         watchdog = FeedWatchdog(cfg.feed.stale_after_s, pipeline.on_watchdog)
         pipeline.watchdog = watchdog
@@ -138,19 +184,71 @@ async def run(
             cfg.alerts.events_horizon_days,
             cfg.alerts.chart_bars,
             cfg.alerts.chart_dir,
+            on_error=lambda e: service.ops("report_failure", e),
         )
+        strat_markets = {n: list(e.markets) for n, e in enabled.items()}
+
+        async def weekly() -> str:
+            since = now_ms() - 7 * 86_400_000
+            return weekly_text(
+                tracker,
+                strat_markets,
+                ref_means,
+                since,
+                await journal.ops_counts(since),
+                await journal.alerts_since(since),
+                recorder.summary(),
+            )
+
+        async def weekly_loop() -> None:
+            while True:
+                wait = seconds_until_weekly(
+                    datetime.now(UTC), cfg.paper.weekly_weekday, cfg.paper.weekly_hour_utc
+                )
+                await asyncio.sleep(wait)
+                try:
+                    await notifier.send_message(await weekly())
+                except Exception as e:
+                    log.error("weekly_failed", error=repr(e))
+                    service.ops("report_failure", "weekly")
+
         tasks = [
             asyncio.create_task(pipeline.run(), name="pipeline"),
             asyncio.create_task(reporter.run(), name="reporter"),
             asyncio.create_task(watchdog.run(), name="watchdog"),
+            asyncio.create_task(writer.run(), name="journal"),
+            asyncio.create_task(service.run(), name="paper"),
+            asyncio.create_task(weekly_loop(), name="weekly"),
             *(asyncio.create_task(f.run(pipeline.sink), name=f.name) for f in feeds),
         ]
+        if telegram is not None and secrets.telegram_chat_id:
+            ctx = CommandContext(
+                gate,
+                tracker,
+                writer,
+                recorder,
+                watchdog,
+                cfg.watchlist,
+                cfg.markets,
+                [tf.value for tf in cfg.timeframes],
+                strat_markets,
+                ref_means,
+                time.monotonic(),
+                weekly,
+            )
+            bot = CommandBot(telegram, secrets.telegram_chat_id, Commands(ctx))
+            tasks.append(asyncio.create_task(bot.run(), name="commands"))
+        mode = (
+            " — ⏸️ EN PAUSE (/resume)"
+            if gate.paused
+            else (" — ⛔ MODE OBSERVATION (coupe-circuit)" if gate.observation else "")
+        )
         await notifier.send_message(
-            f"🟢 Sentinel démarré — {len(keys)} flux ({', '.join(cfg.watchlist)}), "
+            f"🟢 Sentinel démarré{mode} — {len(keys)} flux ({', '.join(cfg.watchlist)}), "
             f"signal à la {'clôture' if cfg.signal_mode == 'close' else 'volée (intrabar)'}.\n"
             f"Stratégies actives : {', '.join(d.name for d in strat_dets) or 'aucune'}.\n"
-            f"Positions virtuelles en cours : {'; '.join(open_pos) or 'aucune'}.\n"
-            "Outil d'aide à la décision : aucun ordre n'est passé automatiquement."
+            f"Positions papier en cours : {'; '.join(open_pos) or 'aucune'}.\n"
+            "Outil d'aide à la décision : aucun ordre n'est passé automatiquement. /help"
         )
         try:
             if duration_s:
@@ -160,10 +258,14 @@ async def run(
         finally:
             for f in feeds:
                 f.stop()
+            await pipeline.drain()
+            service.flush_writes()
+            with contextlib.suppress(TimeoutError):
+                await asyncio.wait_for(writer.flush(), timeout=5)
             for t in tasks:
                 t.cancel()
             await asyncio.gather(*tasks, return_exceptions=True)
-            await pipeline.drain()
+            await journal.close()
             if telegram:
                 await telegram.aclose()
         summary = recorder.summary()

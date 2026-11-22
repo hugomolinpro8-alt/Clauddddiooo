@@ -47,7 +47,7 @@ def position_size(
         raise ValueError("entrée et stop doivent être > 0 et différents")
     dist = abs(entry - stop)
     risk_amount = capital * risk_pct / 100.0
-    qty = risk_amount / dist
+    qty = risk_amount / dist  # 0 si le plafond de risque ouvert est atteint
     cap_notional = capital * (max_leverage if market is Market.PERP else 1.0)
     capped = qty * entry > cap_notional
     if capped:
@@ -72,3 +72,10 @@ def position_size(
         liq,
         dist / entry,
     )
+
+
+def allowed_risk_pct(base_pct: float, max_open_pct: float, open_pct: float) -> float:
+    """Risque autorisé pour un nouveau trade sous le plafond de risque ouvert total.
+    BTC/ETH/SOL chutent ensemble : 3 positions à 0,5 % = 1,5 % exposés au même choc.
+    Renvoie 0 si le plafond est atteint (le trade ne devrait pas être pris)."""
+    return max(0.0, min(base_pct, max_open_pct - open_pct))

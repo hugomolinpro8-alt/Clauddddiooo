@@ -1,6 +1,6 @@
 # Essai n°2 — Suivi de tendance Donchian 55/20 (journalier)
 
-_Généré le 2026-11-21 23:10 UTC par `uv run python scripts/backtest_donchian.py`. Aucun chiffre n'est saisi à la main._
+_Généré le 2026-11-22 00:47 UTC par `uv run python scripts/backtest_donchian.py`. Aucun chiffre n'est saisi à la main._
 
 ## Règles (figées avant toute exécution)
 
@@ -210,4 +210,4 @@ _Lecture : si seule une petite « île » de paramètres est positive, c'est du 
 ![Équité](trial2_donchian_equity.png)
 
 
-_Temps de calcul : 13 s._
+_Temps de calcul : 12 s._

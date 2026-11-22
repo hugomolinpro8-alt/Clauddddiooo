@@ -160,6 +160,8 @@ class Research:
         self.summary: dict[str, dict[str, float]] = {}
         # statistiques par (marché, actif) exportées en JSON pour les alertes live
         self.per_asset: dict[str, dict[str, Any]] = {}
+        # distribution des R hors échantillon par marché : référence du test de divergence
+        self.per_market: dict[str, dict[str, Any]] = {}
 
     def w(self, s: str) -> None:
         self.lines.append(s)
@@ -237,6 +239,7 @@ class Research:
                     "oos_start": d(OOS_START),
                     "verdicts": self.verdicts,
                     "per_asset": self.per_asset,
+                    "per_market": self.per_market,
                 },
                 indent=2,
                 ensure_ascii=False,
@@ -263,6 +266,11 @@ class Research:
         for sym, ts in [*all_trades.items(), ("**Total**", pooled)]:
             for per, a, b in (("IS", 0, OOS_START), ("OOS", OOS_START, FAR)):
                 w(f"| {sym} | {per} " + _fmt_ts(trade_stats(split(ts, a, b))))
+        oos_pooled = split(pooled, OOS_START, FAR)
+        self.per_market[market.value] = {
+            "oos_r": [round(t.r_net, 6) for t in oos_pooled],
+            "oos_mean": float(np.mean([t.r_net for t in oos_pooled])) if oos_pooled else 0.0,
+        }
         for sym, ts in all_trades.items():
             full, oo = trade_stats(ts), trade_stats(split(ts, OOS_START, FAR))
             self.per_asset[f"{market.value}:{sym}"] = {

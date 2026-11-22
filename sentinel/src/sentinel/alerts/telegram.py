@@ -153,3 +153,23 @@ class TelegramClient:
         )
         t1 = time.perf_counter_ns()
         return SentMessage(int(result["message_id"]), t1, (t1 - t0) / 1e6)
+
+    async def get_updates(self, offset: int | None, timeout_s: int = 30) -> list[dict[str, Any]]:
+        """Interrogation longue (« long polling ») des commandes reçues. Sur un PC sans IP
+        publique, c'est la seule option (pas de webhook). Hors chemin critique."""
+        payload: dict[str, Any] = {"timeout": timeout_s, "allowed_updates": ["message"]}
+        if offset is not None:
+            payload["offset"] = offset
+        try:
+            r = await self._client.post("/getUpdates", json=payload, timeout=timeout_s + 15)
+            body = r.json()
+        except (httpx.HTTPError, ValueError) as e:
+            log.warning("telegram_get_updates_failed", error=redact_text(repr(e)))
+            await asyncio.sleep(5)
+            return []
+        if not body.get("ok"):
+            log.warning("telegram_get_updates_error", description=body.get("description"))
+            await asyncio.sleep(5)
+            return []
+        result: list[dict[str, Any]] = body["result"]
+        return result
