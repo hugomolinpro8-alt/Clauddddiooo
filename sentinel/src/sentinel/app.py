@@ -14,6 +14,7 @@ import argparse
 import asyncio
 import contextlib
 import json
+import signal
 import time
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -53,10 +54,15 @@ from sentinel.strategies.registry import strategy_factory
 log = get_logger("sentinel")
 
 
-def seconds_until_weekly(now: datetime, weekday: int, hour_utc: int) -> float:
-    """Secondes jusqu'au prochain (jour de semaine, heure UTC) strictement futur."""
+class FatalRestart(Exception):
+    """Arrêt volontaire pour être relancé par Docker (restart: unless-stopped)."""
+
+
+def seconds_until_weekly(now: datetime, weekday: int | None, hour_utc: int) -> float:
+    """Secondes jusqu'au prochain (jour de semaine, heure UTC) strictement futur.
+    weekday=None : tous les jours."""
     target = now.replace(hour=hour_utc, minute=0, second=0, microsecond=0)
-    days = (weekday - now.weekday()) % 7
+    days = 0 if weekday is None else (weekday - now.weekday()) % 7
     target += timedelta(days=days)
     if target <= now:
         target += timedelta(days=7)
@@ -212,7 +218,58 @@ async def run(
                     log.error("weekly_failed", error=repr(e))
                     service.ops("report_failure", "weekly")
 
+        hb_file = cfg.alerts.heartbeat_file
+
+        async def supervisor() -> None:
+            """Pouls pour le healthcheck Docker + arrêt volontaire si un flux est mort."""
+            hb_file.parent.mkdir(parents=True, exist_ok=True)
+            while True:
+                await asyncio.sleep(15)
+                sil = watchdog.silence()
+                worst = max(sil.values(), default=0.0)
+                payload = json.dumps(
+                    {
+                        "ts": time.time(),
+                        "bars": pipeline.bars_processed,
+                        "worst_silence_s": round(worst, 1),
+                        "stale": sorted(watchdog.stale),
+                    }
+                )
+                await asyncio.to_thread(hb_file.write_text, payload)
+                if worst > cfg.feed.restart_after_s:
+                    with contextlib.suppress(Exception):
+                        await notifier.send_message(
+                            f"🔁 Flux muet depuis {worst / 60:.0f} min : redémarrage du "
+                            "processus (relancé automatiquement par Docker)."
+                        )
+                    raise FatalRestart(f"flux muet {worst:.0f} s")
+
+        async def daily_heartbeat() -> None:
+            hour = cfg.alerts.daily_heartbeat_hour_utc
+            if hour is None:
+                return
+            last_bars = pipeline.bars_processed
+            while True:
+                await asyncio.sleep(seconds_until_weekly(datetime.now(UTC), None, hour))
+                n = pipeline.bars_processed - last_bars
+                last_bars = pipeline.bars_processed
+                mode = (
+                    "PAUSE"
+                    if gate.paused
+                    else "OBSERVATION (coupe-circuit)"
+                    if gate.observation
+                    else "actif"
+                )
+                with contextlib.suppress(Exception):
+                    await notifier.send_message(
+                        f"💓 Sentinel en vie — mode {mode}, {n} mises à jour de marché en 24 h, "
+                        f"{len(tracker.active())} position(s) papier, équité papier "
+                        f"{tracker.equity():.2f} €. Sans ce message demain, le bot est arrêté."
+                    )
+
         tasks = [
+            asyncio.create_task(supervisor(), name="supervisor"),
+            asyncio.create_task(daily_heartbeat(), name="heartbeat"),
             asyncio.create_task(pipeline.run(), name="pipeline"),
             asyncio.create_task(reporter.run(), name="reporter"),
             asyncio.create_task(watchdog.run(), name="watchdog"),
@@ -250,12 +307,25 @@ async def run(
             f"Positions papier en cours : {'; '.join(open_pos) or 'aucune'}.\n"
             "Outil d'aide à la décision : aucun ordre n'est passé automatiquement. /help"
         )
+        # Arrêt propre sur SIGTERM (docker stop / mise à jour) et SIGINT : on vide le journal
+        # avant de quitter. Sans cela, les dernières écritures en file seraient perdues.
+        stop = asyncio.Event()
+        loop = asyncio.get_running_loop()
+        for sig in (signal.SIGTERM, signal.SIGINT):
+            with contextlib.suppress(NotImplementedError):  # Windows
+                loop.add_signal_handler(sig, stop.set)
+        waiters = [asyncio.create_task(stop.wait(), name="stop"), *tasks]
+        if duration_s:
+            waiters.append(asyncio.create_task(asyncio.sleep(duration_s), name="duration"))
         try:
-            if duration_s:
-                await asyncio.sleep(duration_s)
-            else:
-                await asyncio.gather(*tasks)
+            done, _ = await asyncio.wait(waiters, return_when=asyncio.FIRST_COMPLETED)
+            for t in done:
+                if t.get_name() not in ("stop", "duration") and t.exception() is not None:
+                    raise t.exception()  # type: ignore[misc]
+            log.info("shutdown", reason=next(iter(done)).get_name())
         finally:
+            for w in waiters[:1] + waiters[len(tasks) + 1 :]:
+                w.cancel()
             for f in feeds:
                 f.stop()
             await pipeline.drain()
@@ -295,9 +365,13 @@ def main() -> None:
     configure_logging(args.log_level)
     paths = args.config or ["config/config.yaml"]
     cfg = load_config(*[Path(p) for p in paths])
-    summary = asyncio.run(
-        run(cfg, Secrets(), dry_run=args.dry_run, probe=args.probe, duration_s=args.duration)
-    )
+    try:
+        summary = asyncio.run(
+            run(cfg, Secrets(), dry_run=args.dry_run, probe=args.probe, duration_s=args.duration)
+        )
+    except FatalRestart as e:
+        log.error("fatal_restart", reason=str(e))
+        raise SystemExit(3) from None
     print(json.dumps({"latency_summary": summary}, indent=2))
 
 

@@ -34,6 +34,8 @@ class FeedConfig(BaseModel):
     reconnect_min_backoff_s: float = Field(0.5, gt=0)
     reconnect_max_backoff_s: float = Field(30.0, gt=0)
     ping_interval_s: float = Field(20.0, gt=0)
+    # Flux muet plus longtemps que ça → arrêt volontaire ; Docker relance le processus.
+    restart_after_s: float = Field(900.0, gt=0)
 
 
 class HistoryConfig(BaseModel):
@@ -80,6 +82,8 @@ class AlertConfig(BaseModel):
     chart_dir: Path = Path("data/charts")
     chart_bars: int = Field(120, ge=30)
     events_horizon_days: int = 7
+    daily_heartbeat_hour_utc: int | None = Field(8, ge=0, le=23)  # None = désactivé
+    heartbeat_file: Path = Path("data/heartbeat.json")
 
 
 class PaperConfig(BaseModel):

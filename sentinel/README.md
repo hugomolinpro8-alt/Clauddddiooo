@@ -15,6 +15,16 @@ et qui exécutes.
 >   [`reports/phase2_pullback.md`](reports/phase2_pullback.md),
 >   [journal des essais](reports/RESEARCH_LOG.md).
 
+## Déploiement 24/7
+
+```bash
+cp .env.example .env   # remplir le token et le chat_id
+docker compose up -d --build
+```
+
+Redémarrage automatique, healthcheck, arrêt propre, message de vie quotidien : voir
+[DEPLOY.md](DEPLOY.md) (VPS recommandé, ≈ 5 €/mois).
+
 ## Installation
 
 Prérequis : Python ≥ 3.12 et [uv](https://docs.astral.sh/uv/).
@@ -87,7 +97,7 @@ Commandes Telegram (seul ton `TELEGRAM_CHAT_ID` est obéi) : `/status`, `/stats`
 ## Tests
 
 ```bash
-uv run pytest -q             # 83 tests, ~15 s, sans réseau
+uv run pytest -q             # 86 tests, ~15 s, sans réseau
 uv run pytest -q -s tests/test_latency.py   # affiche les percentiles de latence
 uv run ruff check src tests && uv run mypy  # style + typage strict
 ```

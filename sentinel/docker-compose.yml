@@ -1,0 +1,19 @@
+# Lancement : docker compose up -d --build     Logs : docker compose logs -f
+services:
+  sentinel:
+    build: .
+    image: sentinel:latest
+    container_name: sentinel
+    restart: unless-stopped        # relance après crash, reboot du VPS, ou arrêt volontaire (flux mort)
+    env_file: .env                 # TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID — jamais dans l'image
+    environment:
+      - TZ=UTC
+    volumes:
+      - ./data:/app/data           # journal SQLite, cache d'historique, graphiques, pouls
+      - ./config:/app/config:ro    # modifier la config sans reconstruire l'image
+    stop_grace_period: 30s         # laisse le temps de vider le journal (SIGTERM géré)
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
