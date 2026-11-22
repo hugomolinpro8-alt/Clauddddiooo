@@ -54,5 +54,10 @@ strategies:
     markets: [spot]          # validée en spot long ; shorts perp non significatifs
     allow_short: false
     params: {entry_n: 55, exit_n: 20, stop_atr: 2.0}
+    # Essai n°4 : filtre de volume (min_relvol: 1.5) — critères passés mais amélioration
+    # négligeable (Sharpe OOS 0,91 → 0,92) : NON adopté. Décommenter pour l'essayer.
+    # params: {entry_n: 55, exit_n: 20, stop_atr: 2.0, min_relvol: 1.5}
   trend_pullback:
     enabled: false           # essai n°1 rejeté : espérance OOS ≤ 0 après frais
+  range_reversion:
+    enabled: false           # essai n°3 rejeté : espérance OOS −0,05 R, 7 % des réglages positifs

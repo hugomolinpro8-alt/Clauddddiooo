@@ -8,11 +8,13 @@ from typing import Any
 from sentinel.core.config import StrategyEntry
 from sentinel.strategies.base import Strategy
 from sentinel.strategies.donchian import DonchianParams, DonchianTrend
+from sentinel.strategies.mean_reversion import MeanReversionParams, RangeReversion
 from sentinel.strategies.pullback import PullbackParams, TrendPullback
 
 _REGISTRY: dict[str, tuple[Callable[[Any], Strategy], type[Any]]] = {
     DonchianTrend.name: (DonchianTrend, DonchianParams),
     TrendPullback.name: (TrendPullback, PullbackParams),
+    RangeReversion.name: (RangeReversion, MeanReversionParams),
 }
 
 

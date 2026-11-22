@@ -22,7 +22,7 @@ from sentinel.indicators.structure import (
     SwingPoint,
     Trend,
 )
-from sentinel.indicators.volatility import ATR, Bollinger, BollingerValue
+from sentinel.indicators.volatility import ADX, ATR, Bollinger, BollingerValue, PercentRank
 from sentinel.indicators.volume import RelativeVolume, SessionVWAP
 
 
@@ -54,6 +54,8 @@ class IndicatorSnapshot:
     last_swing_low: SwingPoint | None
     support: Level | None
     resistance: Level | None
+    adx: float | None = None
+    vol_rank: float | None = None  # rang de l'ATR % sur ~1 an (0 = plus calme, 1 = plus agité)
 
     @property
     def ready(self) -> bool:
@@ -86,6 +88,8 @@ class IndicatorEngine:
         self.rsi = RSI(cfg.rsi_period)
         self.macd = MACD(*cfg.macd)
         self.atr = ATR(cfg.atr_period)
+        self.adx = ADX(cfg.adx_period)
+        self.vol_rank = PercentRank(cfg.vol_rank_period)
         self.bb = Bollinger(cfg.bb_period, cfg.bb_k)
         self.vwap = SessionVWAP()
         self.relvol = RelativeVolume(cfg.relvol_period)
@@ -122,6 +126,8 @@ class IndicatorEngine:
         rsi = self.rsi.update(c)
         macd = self.macd.update(c)
         atr = self.atr.update(bar.high, bar.low, c)
+        adx = self.adx.update(bar.high, bar.low, c)
+        vrank = self.vol_rank.update(atr / c) if atr and c else None
         bb = self.bb.update(c)
         vwap = self.vwap.update(bar.open_time_ms, bar.high, bar.low, c, bar.volume)
         relvol = self.relvol.update(bar.volume)
@@ -133,7 +139,9 @@ class IndicatorEngine:
 
         self.last_open_ms = bar.open_time_ms
         self.bars_seen += 1
-        self._last = self._snapshot(bar, False, ema, sma, rsi, macd, atr, bb, vwap, relvol, hi, lo)
+        self._last = self._snapshot(
+            bar, False, ema, sma, rsi, macd, atr, bb, vwap, relvol, hi, lo, adx, vrank
+        )
         return self._last
 
     def preview(self, bar: Bar) -> IndicatorSnapshot:
@@ -153,6 +161,8 @@ class IndicatorEngine:
             self.relvol.preview(bar.volume),
             self.highest.preview(bar.high),
             self.lowest.preview(bar.low),
+            self.adx.preview(bar.high, bar.low, c),
+            None,
         )
 
     def _snapshot(
@@ -169,6 +179,8 @@ class IndicatorEngine:
         relvol: float | None,
         hi: float | None,
         lo: float | None,
+        adx: float | None = None,
+        vol_rank: float | None = None,
     ) -> IndicatorSnapshot:
         sup, res = self.sr.nearest(bar.close)
         return IndicatorSnapshot(
@@ -192,4 +204,6 @@ class IndicatorEngine:
             last_swing_low=self.structure.last_low,
             support=sup,
             resistance=res,
+            adx=adx,
+            vol_rank=vol_rank,
         )

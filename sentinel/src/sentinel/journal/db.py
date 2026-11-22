@@ -27,7 +27,8 @@ CREATE TABLE IF NOT EXISTS alerts (
     strategy TEXT NOT NULL, market TEXT NOT NULL, symbol TEXT NOT NULL, side TEXT NOT NULL,
     signal_close REAL NOT NULL, stop REAL NOT NULL, risk_pct REAL NOT NULL,
     telegram_msg_id INTEGER, latency_ms REAL, muted INTEGER NOT NULL DEFAULT 0,
-    observation INTEGER NOT NULL DEFAULT 0, text TEXT
+    observation INTEGER NOT NULL DEFAULT 0, text TEXT, score REAL, regime TEXT,
+    smart_money TEXT
 );
 CREATE TABLE IF NOT EXISTS paper_trades (
     id INTEGER PRIMARY KEY,

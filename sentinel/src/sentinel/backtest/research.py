@@ -75,6 +75,9 @@ class ResearchSpec:
     bar_label: str
     min_train_trades: int = 15
     risk_pct: float = 0.005
+    # False pour les variantes : sinon elles écraseraient les statistiques de la stratégie
+    # validée, citées par les alertes live (reports/stats/<nom>.json).
+    export_stats: bool = True
     notes: list[str] = field(default_factory=list)
 
 
@@ -227,6 +230,8 @@ class Research:
         w(f"\n_Temps de calcul : {time.perf_counter() - t0:.0f} s._")
         (OUT / f"{sp.stem}.md").write_text("\n".join(self.lines), encoding="utf-8")
         name = sp.make_strategy(sp.base_params).name
+        if not sp.export_stats:
+            return self.verdicts
         stats_dir = OUT / "stats"
         stats_dir.mkdir(exist_ok=True)
         (stats_dir / f"{name}.json").write_text(
@@ -405,6 +410,7 @@ class Research:
         )
 
         oos = trade_stats(split(pooled, OOS_START, FAR))
+        ins = trade_stats(split(pooled, 0, OOS_START))
         act = sp.activation
         assert oos_eq is not None
         checks = {
@@ -448,6 +454,8 @@ class Research:
             "combos": len(combos),
             "ex3": ex3,
             "cost2": stress[2.0],
+            "is_exp": ins.expectancy_r,
+            "is_n": ins.n,
         }
         w(
             f"\n**→ {'ACTIVABLE' if ok else 'NON ACTIVÉE'}** (IC 95 % de l'espérance OOS : "

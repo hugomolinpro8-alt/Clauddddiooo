@@ -26,7 +26,9 @@ from sentinel.core.logging import get_logger
 from sentinel.core.models import Bar, Market, StreamKey, Timeframe
 from sentinel.indicators.engine import IndicatorEngine, IndicatorSnapshot
 from sentinel.pipeline.runner import Signal
+from sentinel.regime.classifier import Regime, classify
 from sentinel.risk.sizing import SizePlan, allowed_risk_pct, position_size
+from sentinel.scoring.confluence import Score, SmartMoneyView, confluence_score
 from sentinel.strategies.base import Setup, Side, Strategy
 
 log = get_logger(__name__)
@@ -85,6 +87,10 @@ class AlertContext:
     base_risk_pct: float = 0.5  # risque prévu par trade ; size.risk_pct peut être plus bas
     open_risk_pct: float = 0.0  # risque déjà ouvert (paper) au moment du signal
     max_open_risk_pct: float = 1.5
+    regime: Regime | None = None
+    score: Score | None = None
+    score_validated: bool = False
+    smart_money: SmartMoneyView | None = None
 
 
 @dataclass(slots=True)
@@ -106,6 +112,8 @@ class StrategyDetector:
         format_alert: Callable[[AlertContext], str],
         history_len: int = 400,  # ≥ 200 pour tracer l'EMA200 sur le graphique
         open_risk_pct: Callable[[], float] | None = None,
+        score_validated: bool = False,
+        smart_money: Callable[[Market, str, Side], SmartMoneyView | None] | None = None,
     ) -> None:
         proto = make_strategy()
         self.name = proto.name
@@ -121,6 +129,8 @@ class StrategyDetector:
         self.positions: dict[tuple[Market, str], VirtualPosition] = {}
         self._history_len = history_len
         self._open_risk_pct = open_risk_pct or (lambda: 0.0)
+        self.score_validated = score_validated
+        self._smart_money = smart_money
 
     def _accepts(self, bar: Bar) -> bool:
         return bar.key.market in self.markets and bar.key.timeframe is self._proto.timeframe
@@ -205,6 +215,12 @@ class StrategyDetector:
         except ValueError:
             log.error("sizing_failed", stream=str(bar.key), stop=setup.stop)
             return None
+        multi_tf = self._ctx(bar, [tf for tf in Timeframe if tf.seconds >= 900])
+        regime = classify(multi_tf.get(Timeframe.D1) or snap)
+        sm = (
+            self._smart_money(bar.key.market, bar.symbol, setup.side) if self._smart_money else None
+        )
+        score = confluence_score(setup, snap, multi_tf, regime, self._proto.style, sm)
         ctx = AlertContext(
             setup=setup,
             strategy_name=self.name,
@@ -214,7 +230,7 @@ class StrategyDetector:
             exit_channel_level=self.channel_level(*k, setup.side, setup.exit_channel),
             bar=bar,
             snap=snap,
-            multi_tf=self._ctx(bar, [tf for tf in Timeframe if tf.seconds >= 900]),
+            multi_tf=multi_tf,
             size=size,
             stats=self.stats.get(f"{bar.key.market.value}:{bar.key.symbol}"),
             history=tuple(self._history[k]),
@@ -222,6 +238,10 @@ class StrategyDetector:
             base_risk_pct=self.risk.risk_per_trade_pct,
             open_risk_pct=open_pct,
             max_open_risk_pct=self.risk.max_open_risk_pct,
+            regime=regime,
+            score=score,
+            score_validated=self.score_validated,
+            smart_money=sm,
         )
         return Signal(bar.key, self.name, self.format_alert(ctx), bar, snap, payload=ctx)
 

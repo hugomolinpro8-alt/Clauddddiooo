@@ -94,3 +94,83 @@ class Bollinger:
             return None
         window = list(self._buf)[-(self.period - 1) :] if self.period > 1 else []
         return self._compute([*window, x])
+
+
+class ADX:
+    """Average Directional Index de Wilder : FORCE de la tendance (pas son sens), 0-100.
+
+    +DM = hausse du plus haut si elle dépasse la baisse du plus bas (sinon 0), −DM l'inverse.
+    +DI/−DI = lissages de Wilder de ±DM rapportés au lissage du True Range ; DX = |+DI − −DI|
+    / (+DI + −DI) ; ADX = lissage de Wilder du DX. Repères usuels : < 20 range, > 25 tendance.
+    """
+
+    __slots__ = ("_adx", "_mdm", "_pdm", "_prev", "_tr", "period")
+
+    def __init__(self, period: int = 14) -> None:
+        self.period = period
+        self._tr, self._pdm, self._mdm, self._adx = (
+            RMA(period),
+            RMA(period),
+            RMA(period),
+            RMA(period),
+        )
+        self._prev: tuple[float, float, float] | None = None  # (high, low, close)
+
+    @property
+    def value(self) -> float | None:
+        return self._adx.value
+
+    def _dx(self, tr: float | None, pdm: float | None, mdm: float | None) -> float | None:
+        if tr is None or pdm is None or mdm is None or tr == 0:
+            return None
+        pdi, mdi = 100 * pdm / tr, 100 * mdm / tr
+        return 0.0 if pdi + mdi == 0 else 100 * abs(pdi - mdi) / (pdi + mdi)
+
+    def _moves(self, high: float, low: float) -> tuple[float, float, float]:
+        assert self._prev is not None
+        ph, pl, pc = self._prev
+        up, down = high - ph, pl - low
+        pdm = up if up > down and up > 0 else 0.0
+        mdm = down if down > up and down > 0 else 0.0
+        return true_range(high, low, pc), pdm, mdm
+
+    def update(self, high: float, low: float, close: float) -> float | None:
+        if self._prev is None:
+            self._prev = (high, low, close)
+            return None
+        tr, pdm, mdm = self._moves(high, low)
+        self._prev = (high, low, close)
+        dx = self._dx(self._tr.update(tr), self._pdm.update(pdm), self._mdm.update(mdm))
+        return self._adx.update(dx) if dx is not None else None
+
+    def preview(self, high: float, low: float, close: float) -> float | None:
+        if self._prev is None:
+            return None
+        tr, pdm, mdm = self._moves(high, low)
+        dx = self._dx(self._tr.preview(tr), self._pdm.preview(pdm), self._mdm.preview(mdm))
+        return self._adx.preview(dx) if dx is not None else self._adx.value
+
+
+class PercentRank:
+    """Rang (0-1) de la dernière valeur dans les `period` dernières : 0,9 = plus haute que 90 %
+    des valeurs de l'année. Sert à dire si la volatilité actuelle est haute ou basse POUR CET
+    ACTIF (un ATR de 3 % est calme pour SOL, agité pour BTC). O(n) avec n = 365, en journalier."""
+
+    __slots__ = ("_buf",)
+
+    def __init__(self, period: int = 365) -> None:
+        self._buf: deque[float] = deque(maxlen=period)
+
+    def _rank(self, x: float, values: Iterable[float]) -> float:
+        vals = list(values)
+        return sum(v <= x for v in vals) / len(vals)
+
+    def update(self, x: float) -> float | None:
+        self._buf.append(x)
+        return self._rank(x, self._buf) if len(self._buf) >= 30 else None
+
+    def preview(self, x: float) -> float | None:
+        if len(self._buf) < 29:
+            return None
+        window = list(self._buf)[1:] if len(self._buf) == self._buf.maxlen else list(self._buf)
+        return self._rank(x, [*window, x])

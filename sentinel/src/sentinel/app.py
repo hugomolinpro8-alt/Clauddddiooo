@@ -132,6 +132,10 @@ async def run(
         gate.paused = bool(await journal.get_state("paused", False))
         service = PaperService(tracker, writer, notifier)
 
+        score_file = cfg.alerts.stats_dir / "score.json"
+        score_validated = bool(
+            score_file.exists() and json.loads(score_file.read_text()).get("validated")
+        )
         detectors: list[Detector] = [ProbeDetector()] if probe else []
         strat_dets: list[StrategyDetector] = []
         for name, entry in enabled.items():
@@ -143,6 +147,7 @@ async def run(
                 load_stats(cfg.alerts.stats_dir, name),
                 format_alert,
                 open_risk_pct=tracker.open_risk_pct,
+                score_validated=score_validated,
             )
             strat_dets.append(det)
             detectors.append(det)

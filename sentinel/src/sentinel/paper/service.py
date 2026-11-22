@@ -60,6 +60,16 @@ class PaperService:
                 "muted": int(muted),
                 "observation": int(observation),
                 "text": sig.text,
+                # journalisés pour réévaluer plus tard, sur le paper trading, si le score et
+                # le smart money prédisent réellement la qualité des trades
+                "score": ctx.score.total if ctx.score else None,
+                "regime": ctx.regime.describe() if ctx.regime else None,
+                "smart_money": (
+                    f"{ctx.smart_money.same_side}/{ctx.smart_money.opposite_side}/"
+                    f"{ctx.smart_money.tracked}"
+                    if ctx.smart_money
+                    else None
+                ),
             },
         )
         # Le paper trading mesure la STRATÉGIE : il suit aussi les alertes muettes (pause)

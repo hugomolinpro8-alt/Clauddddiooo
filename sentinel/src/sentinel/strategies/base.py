@@ -45,6 +45,7 @@ class Strategy(Protocol):
     name: str
     label: str
     horizon: str
+    style: str  # "trend" (suivi de tendance) ou "mean_reversion" (retour à la moyenne)
     profile_warnings: tuple[str, ...]
     timeframe: Timeframe
     context: tuple[Timeframe, ...]

@@ -65,6 +65,29 @@ def fmt_qty(q: float) -> str:
     return fmt_num(q, min(digits, 8))
 
 
+def _score_head(c: AlertContext) -> str:
+    if c.score is None:
+        return "Score : n/d"
+    tag = "" if c.score_validated else " (indicatif)"
+    return f"Score {c.score.total}/100{tag}"
+
+
+def _smart_line(c: AlertContext) -> str:
+    sm = c.smart_money
+    if sm is None or sm.tracked == 0:
+        return "Smart money : aucun portefeuille suivi ne passe les critères (voir /wallets)"
+    side = "long" if c.setup.side is Side.LONG else "short"
+    if sm.same_side and not sm.opposite_side:
+        return f"Smart money : {sm.same_side} portefeuille(s) suivi(s) {side} sur cet actif"
+    if sm.opposite_side and not sm.same_side:
+        return (
+            f"Smart money : {sm.opposite_side} portefeuille(s) suivi(s) à l'OPPOSÉ (voir rapport)"
+        )
+    if sm.same_side or sm.opposite_side:
+        return f"Smart money : {sm.same_side} dans le même sens, {sm.opposite_side} à l'opposé"
+    return f"Smart money : aucun des {sm.tracked} portefeuilles suivis n'est positionné"
+
+
 def _channel_note(c: AlertContext) -> str:
     """Précise si le canal est déjà actif ou encore sous le stop initial (cas fréquent juste
     après une cassure) : sinon on croirait que le stop effectif est le canal."""
@@ -89,7 +112,7 @@ def format_alert(c: AlertContext) -> str:
     mkt = "spot" if b.key.market is Market.SPOT else "perp"
     risk = abs(s.signal_close - s.stop)
     lines = [
-        f"{icon} {word} {b.symbol} ({mkt}) | {c.horizon} | Score : n/d (phase 5)",
+        f"{icon} {word} {b.symbol} ({mkt}) | {c.horizon} | {_score_head(c)}",
         f"Entrée ≈ {fmt_price(s.signal_close)} (ouverture suivante) | Stop : {fmt_price(s.stop)} "
         f"({fmt_pct(-sz.stop_distance_pct if long else sz.stop_distance_pct, signed=True)})",
     ]
@@ -138,7 +161,7 @@ def format_alert(c: AlertContext) -> str:
             f"{fmt_pct(sz.liq_distance_pct)} de l'entrée".replace(".", ",")
         )
     lines.append(f"Stratégie : {s.reason} — {c.strategy_label}")
-    lines.append("Smart money : module non actif (phase 6)")
+    lines.append(_smart_line(c))
     if c.stats:
         st = c.stats
         lines.append(
@@ -256,6 +279,25 @@ def confluences_and_risks(c: AlertContext) -> tuple[list[str], list[str]]:
         )
     if snap.support and not long and atr and snap.close - snap.support.price < atr:
         con.append(f"Support proche à {fmt_price(snap.support.price)}, à moins d'1 ATR.")
+    sm = c.smart_money
+    if sm is not None and sm.opposite_side:
+        con.append(
+            f"Smart money à l'opposé : {sm.opposite_side} portefeuille(s) suivi(s) "
+            "positionné(s) contre ce trade"
+            + (f" ({'; '.join(sm.details)})" if sm.details else "")
+            + "."
+        )
+    if sm is not None and sm.same_side:
+        pro.append(
+            f"Smart money : {sm.same_side} portefeuille(s) suivi(s) dans le même sens"
+            + (f" ({'; '.join(sm.details)})" if sm.details else "")
+            + " — indice seulement, leurs couvertures ailleurs sont invisibles."
+        )
+    if c.regime is not None and c.regime.vol is not None and c.regime.vol.value == "haute":
+        con.append(
+            "Volatilité haute (rang ≥ 80 % sur 1 an) : le bruit touche plus souvent "
+            "les stops ; taille calculée sur un stop large."
+        )
     if c.size.capped:
         con.append(
             "Taille plafonnée par le capital : le risque réel est inférieur au risque "
@@ -298,7 +340,7 @@ def format_report(c: AlertContext, events: list[RiskEvent]) -> str:
         L.append(f"Clôture à {fmt_price(s.signal_close)} : {s.reason}.")
     L.append("")
     L.append("🧭 Contexte")
-    L.append(f"• Régime journalier : {_regime(d)}")
+    L.append(f"• Régime journalier : {c.regime.describe() if c.regime else _regime(d)}")
     L.append(f"• Volatilité : ATR 14 = {fmt_price(snap.atr or 0)} ({fmt_pct(atr_pct)} du prix)")
     for tf in (Timeframe.D1, Timeframe.H4, Timeframe.H1):
         if c.multi_tf.get(tf) is not None:
@@ -315,6 +357,22 @@ def format_report(c: AlertContext, events: list[RiskEvent]) -> str:
             f"• Volume : {snap.relvol:.2f}× la moyenne des 20 dernières bougies".replace(".", ",")
         )
     L.append("")
+    if c.score is not None:
+        tag = (
+            ""
+            if c.score_validated
+            else (
+                " — indicatif : n'a pas montré de pouvoir prédictif "
+                "en backtest, il ne filtre aucune alerte"
+            )
+        )
+        L.append(f"🧮 Score {c.score.total}/100{tag}")
+        for comp in c.score.components:
+            L.append(
+                f"• {comp.name} {comp.points:.0f}/{comp.max_points:.0f} : "
+                + ", ".join(comp.reasons)
+            )
+        L.append("")
     L.append("✅ Confluences")
     L.extend(f"• {p}" for p in pro) if pro else L.append(
         "• Aucune confluence supplémentaire au signal de base."

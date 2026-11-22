@@ -203,3 +203,34 @@ def test_rsi_extremes() -> None:
     for _ in range(30):
         v = flat.update(10.0)
     assert v == 50.0
+
+
+def test_adx_matches_pandas() -> None:
+    from sentinel.indicators.volatility import ADX
+
+    p = 14
+    h, lo, c = DF.h, DF.l, DF.c
+    up, down = h.diff(), -lo.diff()
+    pdm = up.where((up > down) & (up > 0), 0.0)
+    mdm = down.where((down > up) & (down > 0), 0.0)
+    prev_c = c.shift(1)
+    tr = pd.concat([h - lo, (h - prev_c).abs(), (lo - prev_c).abs()], axis=1).max(axis=1)
+    s = lambda x: _seeded_ewm(x.iloc[1:].reset_index(drop=True), p, 1 / p)
+    str_, spdm, smdm = s(tr), s(pdm), s(mdm)
+    pdi, mdi = 100 * spdm / str_, 100 * smdm / str_
+    dx = (100 * (pdi - mdi).abs() / (pdi + mdi)).dropna().reset_index(drop=True)
+    adx_tail = _seeded_ewm(dx, p, 1 / p)
+    ref = pd.Series(np.nan, index=DF.index)
+    first = 1 + (p - 1)  # premier DX disponible
+    ref.iloc[first : first + len(adx_tail)] = adx_tail.to_numpy()
+    ind = ADX(p)
+    _assert_close([ind.update(a, b, x) for a, b, x in zip(h, lo, c, strict=True)], ref)
+
+
+def test_percent_rank() -> None:
+    from sentinel.indicators.volatility import PercentRank
+
+    pr = PercentRank(100)
+    vals = [pr.update(float(i)) for i in range(200)]
+    assert vals[28] is None and vals[29] == 1.0  # nouveau maximum
+    assert pr.update(-1.0) == pytest.approx(1 / 100)

@@ -1,6 +1,6 @@
 # Essai n°2 — Suivi de tendance Donchian 55/20 (journalier)
 
-_Généré le 2026-11-22 00:47 UTC par `uv run python scripts/backtest_donchian.py`. Aucun chiffre n'est saisi à la main._
+_Généré le 2026-11-22 13:19 UTC par `uv run python scripts/backtest_donchian.py`. Aucun chiffre n'est saisi à la main._
 
 ## Règles (figées avant toute exécution)
 
@@ -8,7 +8,7 @@ _Généré le 2026-11-22 00:47 UTC par `uv run python scripts/backtest_donchian.
 - Stop initial : clôture − 2 × ATR(14).
 - Sortie : stop suiveur sur le plus bas des 20 derniers jours, jamais abaissé.
 - Aucun objectif fixe ni sortie temporelle (on laisse courir les gains).
-- Paramètres par défaut : `DonchianParams(entry_n=55, exit_n=20, stop_atr=2.0, allow_short=False)`
+- Paramètres par défaut : `DonchianParams(entry_n=55, exit_n=20, stop_atr=2.0, allow_short=False, min_relvol=0.0, min_adx=0.0)`
 
 ## Hypothèses d'exécution
 
@@ -210,4 +210,4 @@ _Lecture : si seule une petite « île » de paramètres est positive, c'est du 
 ![Équité](trial2_donchian_equity.png)
 
 
-_Temps de calcul : 12 s._
+_Temps de calcul : 15 s._

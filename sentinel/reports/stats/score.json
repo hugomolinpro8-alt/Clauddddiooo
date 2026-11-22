@@ -1,0 +1,8 @@
+{
+  "validated": false,
+  "verdict": {
+    "In-sample": true,
+    "Hors échantillon": false
+  },
+  "n": 64
+}

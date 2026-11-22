@@ -1,8 +1,8 @@
 {
   "strategy": "donchian_trend",
   "trial": 2,
-  "generated": "2026-11-22T00:47:29.585479+00:00",
-  "params": "DonchianParams(entry_n=55, exit_n=20, stop_atr=2.0, allow_short=False)",
+  "generated": "2026-11-22T13:19:37.034560+00:00",
+  "params": "DonchianParams(entry_n=55, exit_n=20, stop_atr=2.0, allow_short=False, min_relvol=0.0, min_adx=0.0)",
   "oos_start": "2023-01-01",
   "verdicts": {
     "SPOT (long uniquement)": true,

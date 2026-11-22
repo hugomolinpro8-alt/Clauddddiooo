@@ -4,7 +4,7 @@ Outil personnel d'**aide à la décision**. Il surveille BTC, ETH et SOL en temp
 setups et t'envoie une alerte Telegram. **Il ne passe jamais d'ordre** : c'est toi qui décides
 et qui exécutes.
 
-> État : **Phase 4 terminée.**
+> État : **Phases 1 à 5 et 7 terminées.**
 > - Stratégie active : **Donchian 55/20 journalier, spot long** (essai n°2, validée hors
 >   échantillon). Le pullback 4h (essai n°1) a été rejeté.
 > - Chaque signal produit une alerte instantanée, puis un rapport argumenté en réponse et un
@@ -59,6 +59,8 @@ couvrent que le spot.
 uv run python scripts/download_archives.py    # ~15 s : archives Binance 2019 → aujourd'hui
 uv run python scripts/backtest_pullback.py    # essai n°1 (~90 s) → reports/phase2_pullback.md
 uv run python scripts/backtest_donchian.py    # essai n°2 (~15 s) → reports/trial2_donchian.md
+uv run python scripts/backtest_trials_phase5.py  # essais n°3-5 (retour à la moyenne, filtres)
+uv run python scripts/validate_score.py       # le score de confluence prédit-il les trades ?
 uv run python scripts/demo_alert.py           # alerte + rapport + graphique du dernier signal réel
 uv run python scripts/demo_alert.py --send    # … et envoi sur ton Telegram (marqué DÉMO)
 ```
@@ -71,6 +73,13 @@ Le backtest rejoue l'historique dans les **mêmes** moteurs d'indicateurs et str
 live. Hypothèses d'exécution défavorables : entrée à l'ouverture suivante, stop supposé touché
 avant l'objectif, gaps exécutés à l'ouverture, frais et slippage réels, funding des perps.
 La mécanique est vérifiée par des scénarios calculés à la main (`tests/test_backtest_engine.py`).
+
+## Régime de marché et score de confluence
+
+- Régime journalier : tendance haussière / baissière / range / transition (ADX + EMA50/200)
+  et volatilité haute / normale / basse (rang de l'ATR % sur 1 an).
+- Score 0-100 : régime, technique, multi-unités de temps, smart money. **Non validé** hors
+  échantillon (`reports/phase5_score.md`) : affiché « indicatif », ne filtre aucune alerte.
 
 ## Paper trading, journal et commandes
 
@@ -97,7 +106,7 @@ Commandes Telegram (seul ton `TELEGRAM_CHAT_ID` est obéi) : `/status`, `/stats`
 ## Tests
 
 ```bash
-uv run pytest -q             # 86 tests, ~15 s, sans réseau
+uv run pytest -q             # 94 tests, ~15 s, sans réseau
 uv run pytest -q -s tests/test_latency.py   # affiche les percentiles de latence
 uv run ruff check src tests && uv run mypy  # style + typage strict
 ```

@@ -54,6 +54,8 @@ class IndicatorConfig(BaseModel):
     relvol_period: int = 20
     hl_lookback: int = 20
     swing_k: int = 3
+    adx_period: int = 14
+    vol_rank_period: int = 365
     sr_tolerance_pct: float = 0.4
     sr_max_levels: int = 12
 

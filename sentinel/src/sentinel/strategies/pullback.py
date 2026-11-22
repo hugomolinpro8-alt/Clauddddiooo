@@ -50,6 +50,7 @@ class TrendPullback:
     name = "trend_pullback"
     label = "Pullback EMA20 (4h, filtre journalier)"
     horizon = "Swing 1–5 j"
+    style = "trend"
     profile_warnings: tuple[str, ...] = (
         "Stratégie REJETÉE au backtest (espérance OOS ≤ 0 après frais).",
     )

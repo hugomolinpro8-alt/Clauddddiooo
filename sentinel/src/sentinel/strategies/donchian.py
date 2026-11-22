@@ -32,6 +32,9 @@ class DonchianParams:
     exit_n: int = 20
     stop_atr: float = 2.0
     allow_short: bool = False
+    # Filtres testés aux essais n°4 et 5 (désactivés par défaut = stratégie validée n°2)
+    min_relvol: float = 0.0  # volume de la bougie de cassure ≥ N × moyenne 20 j
+    min_adx: float = 0.0  # ADX journalier ≥ N (exclut les ranges)
 
     def with_(self, **kw: object) -> DonchianParams:
         return replace(self, **kw)  # type: ignore[arg-type]
@@ -41,6 +44,7 @@ class DonchianTrend:
     name = "donchian_trend"
     label = "Donchian 55/20 (journalier)"
     horizon = "Moyen terme (semaines)"
+    style = "trend"
     timeframe = Timeframe.D1
     context: tuple[Timeframe, ...] = ()
     # Rappels de profil, repris dans les contre-arguments de CHAQUE rapport.
@@ -72,6 +76,10 @@ class DonchianTrend:
         if not full or not atr:
             return None
         c = bar.close
+        if p.min_relvol and (snap.relvol is None or snap.relvol < p.min_relvol):
+            return None
+        if p.min_adx and (snap.adx is None or snap.adx < p.min_adx):
+            return None
         if c > upper:
             return self._setup(
                 Side.LONG, c, c - p.stop_atr * atr, bar, f"cassure du plus haut {p.entry_n} jours"
