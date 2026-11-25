@@ -418,10 +418,11 @@ def afficher_aide(etat):
 # ----------------------------------------------------------------------
 # L'ordinateur joue (algorithme glouton, écrit en récursif)
 # ----------------------------------------------------------------------
-def jouer_ordinateur(etat, restant, vus):
+def jouer_ordinateur(etat, restant, vus, bavard):
     """
     FONCTION RÉCURSIVE : l'ordinateur joue le meilleur coup utile, puis
     recommence sur le nouveau plateau. Renvoie le nombre de coups joués.
+    bavard : True pour écrire chaque coup à l'écran, False pour jouer en silence.
       cas d'arrêt : partie gagnée, restant = 0, aucun coup utile,
                     ou plateau déjà vu (il tournerait en rond)
       cas récursif : 1 coup joué + les coups joués ensuite
@@ -430,7 +431,8 @@ def jouer_ordinateur(etat, restant, vus):
         return 0
     cle = str(etat[:4])               # le plateau écrit sous forme de texte
     if cle in vus:
-        print("L'ordinateur tourne en rond : il s'arrête.")
+        if bavard:
+            print("L'ordinateur tourne en rond : il s'arrête.")
         return 0
     vus.append(cle)
     utiles = []
@@ -439,13 +441,33 @@ def jouer_ordinateur(etat, restant, vus):
         if coup[0] >= 2 or coup[1][0] == "p" or coup[1][0] == "d":
             utiles.append(coup)
     if len(utiles) == 0:
-        print("L'ordinateur est bloqué : plus aucun coup utile.")
+        if bavard:
+            print("L'ordinateur est bloqué : plus aucun coup utile.")
         return 0
     trier(utiles)
     executer(etat, utiles[0][1].split())
     etat[COUPS] = etat[COUPS] + 1
-    print("  ordinateur :", utiles[0][2])
-    return 1 + jouer_ordinateur(etat, restant - 1, vus)
+    if bavard:
+        print("  ordinateur :", utiles[0][2])
+    return 1 + jouer_ordinateur(etat, restant - 1, vus, bavard)
+
+
+def nouvelle_partie_gagnable(parametres):
+    """
+    FONCTION : distribue des parties jusqu'à en trouver une qu'on peut gagner.
+    Pour chaque partie, l'ordinateur la joue en silence sur une COPIE :
+    s'il gagne, la partie est gagnable et on la donne au joueur (sans ses coups).
+    """
+    print("Recherche d'une partie gagnable...")
+    essais = 0
+    while True:
+        essais = essais + 1
+        etat = nouvelle_partie(parametres)
+        essai = copier(etat)
+        jouer_ordinateur(essai, MAX_COUPS_AUTO, [], False)
+        if gagnee(essai):
+            print("Partie gagnable trouvée après", essais, "essai(s). À toi de jouer !")
+            return etat
 
 
 # ----------------------------------------------------------------------
@@ -566,7 +588,7 @@ def jouer(etat):
                 if len(mots) == 2:
                     maximum = min(int(mots[1]), MAX_COUPS_AUTO)
                 avant = copier(etat)
-                if jouer_ordinateur(etat, maximum, []) > 0:
+                if jouer_ordinateur(etat, maximum, [], True) > 0:
                     historique.append(avant)
                 afficher(etat)
             else:
@@ -591,7 +613,13 @@ def menu_principal():
         print("1) Nouvelle partie\n2) Reprendre la partie sauvegardée\n3) Commandes et règles\n4) Quitter")
         choix = demander_entier("> ", 1, 4, False)
         if choix == 1:
-            jouer(nouvelle_partie(choisir_niveau()))
+            parametres = choisir_niveau()
+            # Option : dans un vrai Solitaire, certaines parties sont impossibles.
+            # Le joueur peut demander une partie dont on est sûr qu'elle se gagne.
+            if saisir("Partie forcément gagnable (o/n) ? ") == ["o"]:
+                jouer(nouvelle_partie_gagnable(parametres))
+            else:
+                jouer(nouvelle_partie(parametres))
         elif choix == 2:
             etat = charger()
             if etat is None:
